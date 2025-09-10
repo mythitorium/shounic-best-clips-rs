@@ -20,17 +20,17 @@ use crate::state::State;
 //
 //
 
-#[derive(Serialize)]
-struct OutgoingGetResponse {
-    time_left: i64,
-    vote_limit: i64,
-    round: i64
-}
-
-pub fn handle_get(_request: &Request, _db: &mut Transaction, _uid: i64, state: &mut State) -> Response {
-    return Response::json(&OutgoingGetResponse {
-        time_left: state.time_left(),
-        vote_limit: state.vote_limit(),
-        round: state.current_round()
-    });
-}
+//#[derive(Serialize)]
+//struct OutgoingGetResponse {
+//    time_left: i64,
+//    vote_limit: i64,
+//    round: i64
+//}
+//
+//pub fn handle_get(_request: &Request, _db: &mut Transaction, _uid: i64, state: &mut State) -> Response {
+//    return Response::json(&OutgoingGetResponse {
+//        time_left: state.time_left(),
+//        vote_limit: state.vote_limit().unwrap_or(0),
+//        round: state.current_round()
+//    });
+//}

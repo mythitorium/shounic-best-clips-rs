@@ -47,7 +47,7 @@ fn main() {
         Mutex::new(db.expect("Failed to connect to database"))
     };
 
-    let state = Mutex::new(State::new(1741176208)) ;
+    let state = Mutex::new(State::new()) ;
 
     // Initialization tasks
     {
@@ -58,10 +58,22 @@ fn main() {
         // Setup database tables and pragmas
         db.execute_batch(QUERY_SETUP).expect("Failed to initialize database");
 
+        // Generate voter record cache
+        match build_voter_record(&db, &mut state) {
+            Ok(_) => {
+                println!("Voter records loaded. Process took 0 seconds");
+            },
+            Err(error) => {
+                println!("Failed to build voter record on initialization");
+                println!("Reason: {:?}", error);
+                return;
+            }
+        }
+
         // Cache vote totals to the state
         match tally_votes(&db, &mut state) {
             Ok(_) => {
-                // do nothing atm lol
+                println!("Vote tallies loaded. Process took 0 seconds");
             },
             Err(error) => {
                 println!("Failed to tally votes on initialization");
@@ -79,6 +91,8 @@ fn main() {
             thread::sleep(Duration::from_millis(60000));
         }
     });
+
+    println!("");
 
     // Start server
     // Runs per request
@@ -111,7 +125,6 @@ fn main() {
                     // Json payload
                     (GET)  (/vote) =>        { routes::vote::handle_get(request, &mut db, uid, &mut state) }, 
                     (POST) (/vote) =>        { routes::vote::handle_post(request, &mut db, uid, &mut state) }, 
-                    (GET)  (/metadata) =>    { routes::metadata::handle_get(request, &mut db, uid, &mut state)  }, 
                     (GET)  (/admin/login) => { routes::login::handle_get(request, &mut db, uid, &mut state) }, 
                     (GET)  (/admin/data) =>  { routes::admin_data::handle_get(request, &mut db, uid, &mut state) }, 
                     (POST) (/admin/data) =>  { routes::admin_data::handle_post(request, &mut db, uid, &mut state) }, 
@@ -184,6 +197,20 @@ fn tally_votes(db : &Connection, state: &mut State) -> Result<(), Error> {
     for row in rows {
         let (video_id, score, round) = row?;
         state.tally_score(video_id, score, round);
+    }
+
+    Ok(())
+}
+
+
+// Build voter cache
+fn build_voter_record(db : &Connection, state: &mut State) -> Result<(), Error> {
+    let mut stmt = db.prepare(QUERY_GET_VOTES_THIS_ROUND)?;
+    let rows = stmt.query_map([state.current_round()], |row| Ok((row.get(0)?, row.get(1)?)))?;
+
+    for row in rows {
+        let (user_id, category) = row?;
+        state.update_voter_record(user_id, category);
     }
 
     Ok(())

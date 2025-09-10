@@ -14,11 +14,12 @@ pub struct State {
     // These values are saved to a config file on disk
     current_voting_round: i64,
     videos_per_vote: i64,
-    display_deadline_unix: usize,
-    vote_limit: Option<i64>,
+    current_round_unix_deadline: i64,
+    vote_limiter_enabled: bool,
 
     // These values are not
-    cached_vote_totals: HashMap<i64, Tally>,
+    voter_cache: HashMap<i64, Vec<bool>>,
+    vote_total_cache: HashMap<i64, Tally>,
     token_cache: Vec<String>,
     categories: Vec<Category>, // static
     jwt_key: HS256Key
@@ -26,14 +27,15 @@ pub struct State {
 
 
 impl State {
-    pub fn new(unix: usize) -> Self {
+    pub fn new() -> Self {
         State { 
             current_voting_round: 1,
             videos_per_vote: 2,
-            display_deadline_unix: unix,
-            vote_limit: None,
+            current_round_unix_deadline: 0,
+            vote_limiter_enabled: false,
 
-            cached_vote_totals: HashMap::new(),
+            voter_cache: HashMap::new(),
+            vote_total_cache: HashMap::new(),
             categories: vec![Category::new("funny"), Category::new("skill")],
             token_cache: Vec::new(),
             jwt_key: HS256Key::generate()
@@ -41,7 +43,7 @@ impl State {
     }
 
     pub fn tally_score(&mut self, video_id: i64, score: i64, round: i64) {
-        self.cached_vote_totals.entry(video_id).and_modify(|tally| tally.tally_score(score, round)).or_insert(Tally::new());
+        self.vote_total_cache.entry(video_id).and_modify(|tally| tally.tally_score(score, round)).or_insert(Tally::new());
     }
 
     pub fn current_round(&self) -> i64 {
@@ -52,12 +54,39 @@ impl State {
         self.videos_per_vote
     }
 
-    pub fn vote_limit(&self) -> i64 {
-        self.vote_limit.unwrap_or(0)
+    pub fn vote_limiter_enabled(&self) -> bool {
+        self.vote_limiter_enabled
     }
 
-    pub fn time_left(&self) -> i64 {
-        self.display_deadline_unix as i64
+    pub fn get_voter_record(&self, user_id: i64) -> Vec<bool> {
+        if self.vote_limiter_enabled {
+            return self.voter_cache.get(&user_id).unwrap_or(&vec![false, false]).clone();
+        } else {
+            return vec![false, false];
+        }
+        
+    }
+
+    pub fn update_voter_record(&mut self, user_id: i64, category: i64) {
+        if self.vote_limiter_enabled && category < 3 && category > 0 {
+               self.voter_cache
+                .entry(user_id)
+                .and_modify(|votes| votes[category as usize - 1] = true )
+                .or_insert_with(|| -> Vec<bool> { 
+                    let mut d = vec![false, false]; 
+                    d[category as usize - 1] = true; 
+                    d 
+                });
+        }
+    }
+
+    pub fn change_voting_round(&mut self, new_round: i64) {
+        self.voter_cache.clear();
+        self.current_voting_round = new_round;
+    }
+
+    pub fn current_round_unix_deadline(&self) -> i64 {
+        self.current_round_unix_deadline
     }
 
     pub fn generate_new_token(&mut self) -> Result<String, Error> {
@@ -137,5 +166,19 @@ impl Category {
 
     pub fn get_threshold(&self) -> i64 {
         self.participation_threshold
+    }
+}
+
+
+
+struct VoteLimiter {
+    pub enabled: bool,
+    pub cache: HashMap<i64, Vec<bool>>
+}
+
+
+impl VoteLimiter {
+    pub fn new() -> Self {
+        VoteLimiter { enabled: false, cache: HashMap::new() }
     }
 }

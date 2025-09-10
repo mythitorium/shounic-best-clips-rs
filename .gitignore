@@ -1,6 +1,8 @@
 old code/*
 target/*
 db/*
+Cargo.lock
 GUIDE.txt
 *.db
 *.db-*
+*.lock
