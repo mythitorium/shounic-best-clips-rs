@@ -6,7 +6,16 @@ The voting website to be used for shounic's upcoming best clip of the year conte
 
 - [ ] Voting frontend
 - [ ] Frontend admin dashboard
-- [x] Server config endpoint
-- [ ] Database tables endpoint
+- [x] server/config endpoint
+- [ ] server/tables endpoint
 - [x] Refactor state struct to not be so ass
 - [ ] Re-write interactions with the database so it isn't so ass
+- [ ] Prevent voting round value from ever decreasing
+- [ ] Make server/tables endpoint target single rows only
+- [ ] Figure out how tf raw submissions are going to be handled
+- [ ] Remove token_cache 
+- [ ] Implement a new config parameter for controlling eliminations
+  - [ ] Consider a staggered thread-based cull
+  - [ ] Endpoint handling 
+  - [ ] Database
+  - [ ] Implement automatic round increase
