@@ -27,17 +27,17 @@ pub struct State {
 
 #[derive(Serialize, Deserialize)]
 pub struct Config {
-    current_voting_round: i64,
+    voting_round: i64,
     videos_per_vote: i64,
-    current_round_unix_deadline: i64,
-    vote_limiter_enabled: bool,
+    unix_deadline: i64,
+    limit_votes: bool,
 }
 
 
 impl Config {
     pub fn new() -> Config {
         toml::from_str(&fs::read_to_string(CONFIG_FILENAME).unwrap_or(".".to_string()))
-            .unwrap_or(Config { current_voting_round: 1, videos_per_vote: 2, current_round_unix_deadline: 0, vote_limiter_enabled: false })
+            .unwrap_or(Config { voting_round: 1, videos_per_vote: 2, unix_deadline: 0, limit_votes: false })
     }
 
     pub fn save(&self) {
@@ -57,24 +57,34 @@ impl State {
         }
     }
 
+
     pub fn tally_score(&mut self, video_id: i64, score: i64, round: i64) {
         self.vote_total_cache.entry(video_id).and_modify(|tally| tally.tally_score(score, round)).or_insert(Tally::new());
     }
 
+    
     pub fn current_round(&self) -> i64 {
-        self.config.current_voting_round
+        self.config.voting_round
     } 
+
 
     pub fn videos_per_vote(&self) -> i64 {
         self.config.videos_per_vote
     }
 
-    pub fn vote_limiter_enabled(&self) -> bool {
-        self.config.vote_limiter_enabled
+    
+    pub fn limit_votes(&self) -> bool {
+        self.config.limit_votes
     }
 
+
+    pub fn current_round_unix_deadline(&self) -> i64 {
+        self.config.unix_deadline
+    }
+
+
     pub fn get_voter_record(&self, user_id: i64) -> Vec<bool> {
-        if self.config.vote_limiter_enabled {
+        if self.config.limit_votes {
             return self.voter_cache.get(&user_id).unwrap_or(&vec![false, false]).clone();
         } else {
             return vec![false, false];
@@ -82,8 +92,9 @@ impl State {
         
     }
 
+
     pub fn update_voter_record(&mut self, user_id: i64, category: i64) {
-        if self.config.vote_limiter_enabled && category < (NUMBER_OF_CATEGORIES + 1) && category > 0 {
+        if self.config.limit_votes && category < (NUMBER_OF_CATEGORIES + 1) && category > 0 {
                self.voter_cache
                 .entry(user_id)
                 .and_modify(|votes| votes[category as usize - 1] = true )
@@ -95,31 +106,33 @@ impl State {
         }
     }
 
+
     pub fn set_voting_round(&mut self, new_round: i64) {
         self.voter_cache.clear();
-        self.config.current_voting_round = new_round;
+        self.config.voting_round = new_round;
         self.config.save();
     }
+
 
     pub fn set_videos_per_vote(&mut self, new_vote_size: i64) {
         self.config.videos_per_vote = new_vote_size;
         self.config.save();
     }
 
-    pub fn set_vote_limiter(&mut self, limit_votes: bool) {
-        self.config.vote_limiter_enabled = limit_votes;
+
+    pub fn set_limit_votes(&mut self, limit_votes: bool) {
+        self.config.limit_votes = limit_votes;
         self.config.save();
     }
 
+    
     pub fn set_unix_deadline(&mut self, new_deadline: i64) {
-        self.config.current_round_unix_deadline = new_deadline;
+        self.config.unix_deadline = new_deadline;
         self.config.save();
     }
 
-    pub fn current_round_unix_deadline(&self) -> i64 {
-        self.config.current_round_unix_deadline
-    }
 
+    // Create a new session token
     pub fn generate_new_token(&mut self) -> Result<String, Error> {
         let claims = Claims::create(Duration::from_mins(2));
         let token = self.jwt_key.authenticate(claims)?;
@@ -127,6 +140,8 @@ impl State {
         Ok(token)
     }
 
+
+    // Validate a session token
     pub fn validate_token(&self, token: &String) -> bool {
         if let Ok(_) = self.jwt_key.verify_token::<NoCustomClaims>(token, None) {
             return true;
@@ -135,10 +150,6 @@ impl State {
         }
     }
 
-    pub fn save_self(&mut self) {
-        const LOCATION: &str = "config/config.toml";
-        // TODO: To this
-    }
 
     pub fn config(&self) -> &Config {
         return &self.config;
@@ -151,6 +162,7 @@ impl State {
 pub struct Tally {
     scores: HashMap<i64, HashMap<i64, i64>>
 }
+
 
 impl Tally {
     pub fn new() -> Self {
