@@ -19,3 +19,6 @@ The voting website to be used for shounic's upcoming best clip of the year conte
   - [ ] Endpoint handling 
   - [ ] Database
   - [ ] Implement automatic round increase
+- [ ] Remove old tally system
+- [ ] Replace all text responses with json ones
+
