@@ -3,6 +3,7 @@ target/*
 db/*
 Cargo.lock
 GUIDE.txt
+_main.rs
 *.db
 *.db-*
 *.lock
