@@ -11,7 +11,7 @@ use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use rouille::{try_or_400, Request};
 use rusqlite::{Error, Transaction};
 use rouille::Response;
-use crate::{sql::QUERY_GET_USER_HASH, state::State};
+use crate::{sql::QUERY_GET_USER_HASH, state::State, User};
 
 //
 //
@@ -34,7 +34,7 @@ struct OutgoingGetResponse {
 }
 
 
-pub fn handle_get(request: &Request, db: &mut Transaction, _uid: i64, state: &mut State) -> Response {
+pub fn handle_get(request: &Request, db: &mut Transaction, _user: &User, state: &mut State) -> Response {
         let IncomingGetRequest { username, password } = try_or_400!(rouille::input::json_input(request));
         
         match || -> Result<(String, String), Error> {

@@ -4,39 +4,54 @@
 //
 //
 
-use std::{collections::HashMap, hash::Hash};
+use std::{collections::HashMap, fs::{self, File}, hash::Hash};
 use jwt_simple::{prelude::*, Error};
 
 // This is the server state. It stores configuration and handles any caching that's best done outside a database
 //
 // It also creates and manages it's own file (currently set to config/config.toml), such that basic config can be cached between sessions
+
+pub const NUMBER_OF_CATEGORIES: i64 = 2;
+const CONFIG_FILENAME: &str = "server_config.toml";
+
 pub struct State {
-    // These values are saved to a config file on disk
-    current_voting_round: i64,
-    videos_per_vote: i64,
-    current_round_unix_deadline: i64,
-    vote_limiter_enabled: bool,
+    config: Config,
 
     // These values are not
     voter_cache: HashMap<i64, Vec<bool>>,
     vote_total_cache: HashMap<i64, Tally>,
     token_cache: Vec<String>,
-    categories: Vec<Category>, // static
     jwt_key: HS256Key
+}
+
+
+#[derive(Serialize, Deserialize)]
+pub struct Config {
+    current_voting_round: i64,
+    videos_per_vote: i64,
+    current_round_unix_deadline: i64,
+    vote_limiter_enabled: bool,
+}
+
+
+impl Config {
+    pub fn new() -> Config {
+        toml::from_str(&fs::read_to_string(CONFIG_FILENAME).unwrap_or(".".to_string()))
+            .unwrap_or(Config { current_voting_round: 1, videos_per_vote: 2, current_round_unix_deadline: 0, vote_limiter_enabled: false })
+    }
+
+    pub fn save(&self) {
+        fs::write(CONFIG_FILENAME, toml::to_string(self).unwrap());
+    }
 }
 
 
 impl State {
     pub fn new() -> Self {
         State { 
-            current_voting_round: 1,
-            videos_per_vote: 2,
-            current_round_unix_deadline: 0,
-            vote_limiter_enabled: false,
-
+            config: Config::new(),
             voter_cache: HashMap::new(),
             vote_total_cache: HashMap::new(),
-            categories: vec![Category::new("funny"), Category::new("skill")],
             token_cache: Vec::new(),
             jwt_key: HS256Key::generate()
         }
@@ -47,19 +62,19 @@ impl State {
     }
 
     pub fn current_round(&self) -> i64 {
-        self.current_voting_round
+        self.config.current_voting_round
     } 
 
     pub fn videos_per_vote(&self) -> i64 {
-        self.videos_per_vote
+        self.config.videos_per_vote
     }
 
     pub fn vote_limiter_enabled(&self) -> bool {
-        self.vote_limiter_enabled
+        self.config.vote_limiter_enabled
     }
 
     pub fn get_voter_record(&self, user_id: i64) -> Vec<bool> {
-        if self.vote_limiter_enabled {
+        if self.config.vote_limiter_enabled {
             return self.voter_cache.get(&user_id).unwrap_or(&vec![false, false]).clone();
         } else {
             return vec![false, false];
@@ -68,7 +83,7 @@ impl State {
     }
 
     pub fn update_voter_record(&mut self, user_id: i64, category: i64) {
-        if self.vote_limiter_enabled && category < 3 && category > 0 {
+        if self.config.vote_limiter_enabled && category < (NUMBER_OF_CATEGORIES + 1) && category > 0 {
                self.voter_cache
                 .entry(user_id)
                 .and_modify(|votes| votes[category as usize - 1] = true )
@@ -80,17 +95,33 @@ impl State {
         }
     }
 
-    pub fn change_voting_round(&mut self, new_round: i64) {
+    pub fn set_voting_round(&mut self, new_round: i64) {
         self.voter_cache.clear();
-        self.current_voting_round = new_round;
+        self.config.current_voting_round = new_round;
+        self.config.save();
+    }
+
+    pub fn set_videos_per_vote(&mut self, new_vote_size: i64) {
+        self.config.videos_per_vote = new_vote_size;
+        self.config.save();
+    }
+
+    pub fn set_vote_limiter(&mut self, limit_votes: bool) {
+        self.config.vote_limiter_enabled = limit_votes;
+        self.config.save();
+    }
+
+    pub fn set_unix_deadline(&mut self, new_deadline: i64) {
+        self.config.current_round_unix_deadline = new_deadline;
+        self.config.save();
     }
 
     pub fn current_round_unix_deadline(&self) -> i64 {
-        self.current_round_unix_deadline
+        self.config.current_round_unix_deadline
     }
 
     pub fn generate_new_token(&mut self) -> Result<String, Error> {
-        let claims = Claims::create(Duration::from_hours(2));
+        let claims = Claims::create(Duration::from_mins(2));
         let token = self.jwt_key.authenticate(claims)?;
         self.token_cache.push(token.clone());
         Ok(token)
@@ -107,6 +138,10 @@ impl State {
     pub fn save_self(&mut self) {
         const LOCATION: &str = "config/config.toml";
         // TODO: To this
+    }
+
+    pub fn config(&self) -> &Config {
+        return &self.config;
     }
 }
 
@@ -143,32 +178,6 @@ impl Tally {
             += 1;
     }
 }
-
-
-struct Category {
-    participation_threshold: i64,
-    name: String
-}
-
-
-impl Category {
-    pub fn new(name: &str) -> Self {
-        Category { participation_threshold: 10000, name: name.to_string() }
-    }
-
-    pub fn get_name(&self) -> String {
-        self.name.clone()
-    }
-
-    pub fn set_threshold(&mut self, new: i64) {
-        self.participation_threshold = new;
-    } 
-
-    pub fn get_threshold(&self) -> i64 {
-        self.participation_threshold
-    }
-}
-
 
 
 struct VoteLimiter {

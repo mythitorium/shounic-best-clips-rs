@@ -7,10 +7,10 @@
 //
 
 // ?1 - ip address
-pub const QUERY_LOG_USER: &str = "INSERT OR IGNORE INTO users(ip) VALUES (?1)";
+pub const QUERY_LOG_USER: &str = "INSERT OR IGNORE INTO users(ip, vote_banned, report_banned) VALUES (?1, 0, 0)";
 
 // ?1 - ip address
-pub const QUERY_GET_USER_ID: &str = "SELECT id FROM users WHERE ip = ?1";
+pub const QUERY_GET_USER_ID: &str = "SELECT id, vote_banned, report_banned FROM users WHERE ip = ?1";
 
 // ?1 - ip address
 pub const QUERY_LOG_USER_RETURN_UID: &str = "INSERT OR IGNORE INTO users(ip) VALUES (?1) RETURNING id;";
@@ -78,6 +78,32 @@ pub const QUERY_GET_VOTES_THIS_ROUND: &str = "SELECT user_id, videos.category FR
 // ?1 - username
 pub const QUERY_GET_USER_HASH: &str = "SELECT salt, password_hash FROM admins WHERE user = ?1;";
 
+// ?1 round
+// ?2 - category
+pub const QUERY_FRONTEND_GET_VIDEO_DATA: &str = "
+    SELECT
+        video_id,
+        videos.youtube_id,
+        videos.uploader_username,
+        videos.is_eliminated,
+        videos.is_disqualified,
+        AVG(score) AS avg_score,
+        COUNT(score) as total_votes 
+    FROM votes
+    JOIN videos ON videos.id = votes.video_id
+    WHERE round = ?1 AND category = ?2
+    GROUP BY video_id
+    ORDER BY avg_score DESC
+";
+
+pub const QUERY_FRONTEND_GET_USER_DATA: &str = "SELECT * FROM users";
+
+pub const QUERY_FRONTEND_GET_REPORT_DATA: &str = "
+    SELECT id, reporter, video_id, videos.youtube_id, videos.is_disqualified, timestamp, resolved 
+    FROM reports 
+    JOIN videos ON reports.video_id = videos.id
+";
+
 pub const QUERY_SETUP: &str = { "
     PRAGMA cache_size = 300000;
     PRAGMA page_size = 16384;
@@ -95,6 +121,8 @@ pub const QUERY_SETUP: &str = { "
     
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        vote_banned INTEGER,
+        report_banned INTEGER,
         ip TEXT UNIQUE
     );
     
@@ -111,16 +139,6 @@ pub const QUERY_SETUP: &str = { "
         FOREIGN KEY (user_id) REFERENCES users (id)
     );
 
-    CREATE TABLE IF NOT EXISTS ranked_finalist_votes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
-        video_id INTEGER,
-        rank INTEGER,
-        vote_time INTEGER,
-        FOREIGN KEY (user_id) REFERENCES users (id),
-        FOREIGN KEY (video_id) REFERENCES videos (id)
-    );
-
     CREATE TABLE IF NOT EXISTS active_votes (
         user_id INTEGER,
         video_id INTEGER,
@@ -132,13 +150,12 @@ pub const QUERY_SETUP: &str = { "
            
     CREATE TABLE IF NOT EXISTS reports (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        reporter INTEGER,
         video_id INTEGER,
-        report_type TEXT,
-        false_flag BOOL,
         timestamp INTEGER NOT NULL,
-        addressed_by INTEGER,
+        resolved INTEGER,
         FOREIGN KEY (video_id) REFERENCES videos (id),
-        FOREIGN KEY (addressed_by) REFERENCES admins (id)
+        FOREIGN KEY (reporter) REFERENCES users (id)
     );
 
     CREATE TABLE IF NOT EXISTS admins (

@@ -1,4 +1,4 @@
 pub mod vote;
-pub mod admin_data;
+pub mod server_config;
 pub mod login;
-// pub mod STEAM_TOKEN_STEALER_9000;
+pub mod server_tables;

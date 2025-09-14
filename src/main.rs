@@ -7,9 +7,6 @@
 //
 //
 
-// TODO: Explain the tally vote system
-// TODO: Make votes tally on vote submit
-
 #![allow(warnings)]
 
 mod sql;
@@ -40,6 +37,14 @@ use rouille::{Request, Response};
 //  / | \        |         / | \        |         / | \        |         / | \ 
 
 
+
+struct User {
+    id: i64,
+    vote_banned: bool,
+    report_banned: bool
+}
+
+
 fn main() {
     let _ = fs::create_dir("db");
     let db = {
@@ -47,7 +52,7 @@ fn main() {
         Mutex::new(db.expect("Failed to connect to database"))
     };
 
-    let state = Mutex::new(State::new()) ;
+    let state = Mutex::new(State::new());
 
     // Initialization tasks
     {
@@ -61,7 +66,7 @@ fn main() {
         // Generate voter record cache
         match build_voter_record(&db, &mut state) {
             Ok(_) => {
-                println!("Voter records loaded. Process took 0 seconds");
+                println!("Voter records loaded.");
             },
             Err(error) => {
                 println!("Failed to build voter record on initialization");
@@ -73,7 +78,7 @@ fn main() {
         // Cache vote totals to the state
         match tally_votes(&db, &mut state) {
             Ok(_) => {
-                println!("Vote tallies loaded. Process took 0 seconds");
+                println!("Vote tallies loaded.");
             },
             Err(error) => {
                 println!("Failed to tally votes on initialization");
@@ -112,7 +117,7 @@ fn main() {
         // Store & process IP then handle routes
         let response: Response;
         match handle_ip(&request, &mut db) {
-            Ok((uid, ip)) => {
+            Ok((user, ip)) => {
                 // Take ip outside of scope so it can be printed to terminal
                 cached_ip = ip;
                 
@@ -123,13 +128,15 @@ fn main() {
                     (GET)  (/admin) =>       { Response::from_file("text/html", File::open("www/admin.html").unwrap()) }, 
 
                     // Json payload
-                    (GET)  (/vote) =>        { routes::vote::handle_get(request, &mut db, uid, &mut state) }, 
-                    (POST) (/vote) =>        { routes::vote::handle_post(request, &mut db, uid, &mut state) }, 
-                    (GET)  (/admin/login) => { routes::login::handle_get(request, &mut db, uid, &mut state) }, 
-                    (GET)  (/admin/data) =>  { routes::admin_data::handle_get(request, &mut db, uid, &mut state) }, 
-                    (POST) (/admin/data) =>  { routes::admin_data::handle_post(request, &mut db, uid, &mut state) }, 
+                    (GET)  (/vote) =>           { routes::vote::handle_get           (request, &mut db, &user, &mut state) }, 
+                    (POST) (/vote) =>           { routes::vote::handle_post          (request, &mut db, &user, &mut state) }, 
+                    (GET)  (/admin/login) =>    { routes::login::handle_get          (request, &mut db, &user, &mut state) }, 
+                    (GET)  (/server/config) =>  { routes::server_config::handle_get  (request, &mut db, &user, &mut state) }, 
+                    (POST) (/server/config) =>  { routes::server_config::handle_post (request, &mut db, &user, &mut state) }, 
+                    (GET)  (/server/tables) =>  { routes::server_tables::handle_get  (request, &mut db, &user, &mut state) }, 
+                    (POST) (/server/tables) =>  { routes::server_tables::handle_post (request, &mut db, &user, &mut state) }, 
 
-                    // Fine you stupid fucks. you can have your css files. mfs.
+                    // 
                     _ => rouille::match_assets(request, "www")
                 );
             },
@@ -158,21 +165,28 @@ fn main() {
 
 // This
 // 1. separates port from id.
-// 2. Log IP to the database and returns the user ID as it exists in the db.
-// returns Result<(db user id, ip)>, ip>
-fn handle_ip(req: &Request, db: &mut Transaction) -> Result<(i64, String), String> {
+// 2. Log IP to the database and returns the user data as it exists in the db.
+// returns Result<(user struct, ip)>, ip>
+fn handle_ip(req: &Request, db: &mut Transaction) -> Result<(User, String), String> {
     let address: &SocketAddr = req.remote_addr();
     let ip_string = address.ip().to_string();
 
     if let Err(_) = db.execute(QUERY_LOG_USER, [ip_string.clone()]) {
         return Err(ip_string);
     }
-    if let Ok(uid) = db.query_row(QUERY_GET_USER_ID, [ip_string.clone()], |row| row.get(0)) {
-        return Ok((uid, ip_string));
+
+    if let Ok((uid, v_ban, r_ban)) = db.query_row(QUERY_GET_USER_ID, [ip_string.clone()], |row| { 
+        let i: i64 = row.get(0)?;
+        let b: i64 = row.get(1)?;
+        let c: i64 = row.get(2)?;
+        Ok((i, b, c))
+    }) {
+        return Ok((User { id: uid, vote_banned: v_ban != 0, report_banned: r_ban != 0 }, ip_string));
     } else {
         return Err(ip_string);
     }
 }
+
 
 // Logging
 fn log_outgoing(ip: String, start_time: Instant, response: &Response, path: String, method: String) {
@@ -187,6 +201,7 @@ fn log_outgoing(ip: String, start_time: Instant, response: &Response, path: Stri
         path
     );
 }
+
 
 // Tally votes
 // TODO: Explain what this does in detail
