@@ -23,6 +23,7 @@ use crate::{sql::{QUERY_FRONTEND_GET_REPORT_DATA, QUERY_FRONTEND_GET_USER_DATA, 
 
 
 #[derive(Deserialize, Serialize, Clone)]
+#[serde(untagged)]
 enum Table {
     Users = 0,
     Videos = 1,
@@ -113,17 +114,39 @@ struct IncomingPostRequest {
 
 
 #[derive(Deserialize, Serialize)]
+#[serde(untagged)]
 enum Action {
     VideoEliminate = 0,
     VideoDisqualify = 1,
     UserVoteBan = 2,
     UserReportBan = 3,
-    ReportResolve = 4,
-    SubmissionInclude = 5,
-    SubmissionApprove = 6
+    ReportResolve = 4
 }
 
 
-pub fn handle_post(_request: &Request, _db: &mut Transaction, _user: &User, _state: &mut State) -> Response {
+pub fn handle_post(request: &Request, _db: &mut Transaction, _user: &User, state: &mut State) -> Response {
+    let IncomingPostRequest { token, relevant_db_ids, table, action_type, action_outcome } = try_or_400!(rouille::input::json_input(request));
+
+    if !state.validate_token(&token) { return Response::text("bad credentials").with_status_code(401); }
+
+    match action_type {
+        Action::VideoEliminate => {
+
+        },
+        Action::VideoDisqualify => {
+
+        },
+        Action::UserVoteBan => {
+
+        },
+        Action::UserReportBan => {
+
+        },
+        Action::ReportResolve => {
+
+        }
+    }
+
+
     Response::empty_404()
 }
