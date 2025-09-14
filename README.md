@@ -10,15 +10,17 @@ The voting website to be used for shounic's upcoming best clip of the year conte
 - [ ] server/tables endpoint
 - [x] Refactor state struct to not be so ass
 - [ ] Re-write interactions with the database so it isn't so ass
-- [ ] Prevent voting round value from ever decreasing
-- [ ] Make server/tables endpoint target single rows only
+- [x] Prevent voting round value from ever decreasing
+- [x] Make server/tables endpoint target single rows only
 - [ ] Figure out how tf raw submissions are going to be handled
-- [ ] Remove token_cache 
+- [x] Remove token_cache 
 - [ ] Implement a new config parameter for controlling eliminations
   - [ ] Consider a staggered thread-based cull
   - [ ] Endpoint handling 
   - [ ] Database
-  - [ ] Implement automatic round increase
-- [ ] Remove old tally system
+  - [x] Implement automatic round increase
+- [x] Remove old tally system
 - [ ] Replace all text responses with json ones
+- [ ] Implement the ability to disable voting
+- [ ] Clean up unused code
 
