@@ -76,16 +76,16 @@ fn main() {
         }
 
         // Cache vote totals to the state
-        match tally_votes(&db, &mut state) {
-            Ok(_) => {
-                println!("Vote tallies loaded.");
-            },
-            Err(error) => {
-                println!("Failed to tally votes on initialization");
-                println!("Reason: {:?}", error);
-                return;
-            }
-        }
+        //match tally_votes(&db, &mut state) {
+        //    Ok(_) => {
+        //        println!("Vote tallies loaded.");
+        //    },
+        //    Err(error) => {
+        //        println!("Failed to tally votes on initialization");
+        //        println!("Reason: {:?}", error);
+        //        return;
+        //    }
+        //}
     }
 
     // Spawn coroutine thread
@@ -205,17 +205,17 @@ fn log_outgoing(ip: String, start_time: Instant, response: &Response, path: Stri
 
 // Tally votes
 // TODO: Explain what this does in detail
-fn tally_votes(db : &Connection, state: &mut State) -> Result<(), Error> {
-    let mut stmt = db.prepare(QUERY_GET_VOTES)?;
-    let rows = stmt.query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))?;
-
-    for row in rows {
-        let (video_id, score, round) = row?;
-        state.tally_score(video_id, score, round);
-    }
-
-    Ok(())
-}
+//fn tally_votes(db : &Connection, state: &mut State) -> Result<(), Error> {
+//    let mut stmt = db.prepare(QUERY_GET_VOTES)?;
+//    let rows = stmt.query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))?;
+//
+//    for row in rows {
+//        let (video_id, score, round) = row?;
+//        state.tally_score(video_id, score, round);
+//    }
+//
+//    Ok(())
+//}
 
 
 // Build voter cache
