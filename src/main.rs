@@ -92,7 +92,7 @@ fn main() {
     thread::spawn(|| {
         thread::sleep(Duration::from_millis(5000));
         while true {
-            let _ = reqwest::blocking::get("http://localhost:8080/coroutine").unwrap().text().unwrap();
+            //let _ = reqwest::blocking::get("http://localhost:8080/coroutine").unwrap().text().unwrap();
             thread::sleep(Duration::from_millis(60000));
         }
     });
