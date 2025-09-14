@@ -80,6 +80,8 @@ pub const QUERY_GET_USER_HASH: &str = "SELECT salt, password_hash FROM admins WH
 
 // ?1 round
 // ?2 - category
+// ?3 - amount
+// ?4 - offset
 pub const QUERY_FRONTEND_GET_VIDEO_DATA: &str = "
     SELECT
         video_id,
@@ -94,14 +96,20 @@ pub const QUERY_FRONTEND_GET_VIDEO_DATA: &str = "
     WHERE round = ?1 AND category = ?2
     GROUP BY video_id
     ORDER BY avg_score DESC
+    LIMIT ?3 OFFSET ?4
 ";
 
-pub const QUERY_FRONTEND_GET_USER_DATA: &str = "SELECT * FROM users";
+// ?1 - amount
+// ?2 - offset
+pub const QUERY_FRONTEND_GET_USER_DATA: &str = "SELECT * FROM users LIMIT ?1 OFFSET ?2";
 
+// ?1 - amount
+// ?2 - offset
 pub const QUERY_FRONTEND_GET_REPORT_DATA: &str = "
     SELECT id, reporter, video_id, videos.youtube_id, videos.is_disqualified, timestamp, resolved 
     FROM reports 
     JOIN videos ON reports.video_id = videos.id
+    LIMIT ?1 OFFSET ?2
 ";
 
 pub const QUERY_SETUP: &str = { "
@@ -115,8 +123,8 @@ pub const QUERY_SETUP: &str = { "
         youtube_id TEXT,
         uploader_username TEXT,
         category INTEGER,
-        is_eliminated INTEGER,
-        is_disqualified INTEGER
+        is_eliminated INTEGER DEFAULT 0,
+        is_disqualified INTEGER DEFAULT 0
     );
     
     CREATE TABLE IF NOT EXISTS users (
