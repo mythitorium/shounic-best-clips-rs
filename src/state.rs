@@ -4,7 +4,7 @@
 //
 //
 
-use std::{collections::HashMap, fs::{self, File}, hash::Hash};
+use std::{collections::HashMap, fs::{self, File}, hash::Hash, time::{SystemTime, UNIX_EPOCH}};
 use jwt_simple::{prelude::*, Error};
 
 // This is the server state. It stores configuration and handles any caching that's best done outside a database
@@ -21,7 +21,7 @@ pub struct State {
     voter_cache: HashMap<i64, Vec<bool>>,
     vote_total_cache: HashMap<i64, Tally>,
     token_cache: Vec<String>,
-    jwt_key: HS256Key
+    jwt_key_pair: ES256KeyPair
 }
 
 
@@ -53,7 +53,7 @@ impl State {
             voter_cache: HashMap::new(),
             vote_total_cache: HashMap::new(),
             token_cache: Vec::new(),
-            jwt_key: HS256Key::generate()
+            jwt_key_pair: ES256KeyPair::generate()
         }
     }
 
@@ -134,8 +134,8 @@ impl State {
 
     // Create a new session token
     pub fn generate_new_token(&mut self) -> Result<String, Error> {
-        let claims = Claims::create(Duration::from_mins(2));
-        let token = self.jwt_key.authenticate(claims)?;
+        let claims = Claims::create(Duration::from_secs(30));
+        let token = self.jwt_key_pair.sign(claims)?;
         self.token_cache.push(token.clone());
         Ok(token)
     }
@@ -143,13 +143,12 @@ impl State {
 
     // Validate a session token
     pub fn validate_token(&self, token: &String) -> bool {
-        if let Ok(_) = self.jwt_key.verify_token::<NoCustomClaims>(token, None) {
-            return true;
+        if let Ok(claims) = self.jwt_key_pair.public_key().verify_token::<NoCustomClaims>(token, None) {
+            return claims.expires_at.unwrap().as_secs() > SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
         } else {
             return false;
         }
     }
-
 
     pub fn config(&self) -> &Config {
         return &self.config;

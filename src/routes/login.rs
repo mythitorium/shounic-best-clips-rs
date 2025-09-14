@@ -37,12 +37,12 @@ struct OutgoingGetResponse {
 pub fn handle_get(request: &Request, db: &mut Transaction, _user: &User, state: &mut State) -> Response {
         let IncomingGetRequest { username, password } = try_or_400!(rouille::input::json_input(request));
         
-        match || -> Result<(String, String), Error> {
+        match || -> Result<String, Error> {
             db.query_row(QUERY_GET_USER_HASH, [username], |row| 
-                Ok((row.get(0)?, row.get(1)?))
+                Ok(row.get(0)?)
             )
         }() {
-            Ok((_salt, password_hash)) => {
+            Ok(password_hash) => {
                 if let Ok(parsed_hash) = PasswordHash::new(&password_hash) {
                     if Argon2::default().verify_password(&password.into_bytes(), &parsed_hash).is_ok() {
                         if let Ok(token) = state.generate_new_token() {

@@ -99,7 +99,7 @@ fn prep_votable_videos(db: &Transaction, mut category: i64, uid: i64, amount: i6
     match || -> Result<Vec<Video>, Error> {
         let mut stmt = db.prepare(QUERY_GET_NEW_VOTABLE_VIDEOS)?;
         // If the category is 0, which signifies "any," modulate unix timestamp to semi randomly chose a category 
-        if category == 0 { category = (SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or(Duration::from_secs(1)).as_millis() % NUMBER_OF_CATEGORIES as u128) as i64 + 1; }
+        if category == 0 { category = (SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() % (NUMBER_OF_CATEGORIES as u128)) as i64 + 1; }
         let mut rows = stmt.query([category.to_string(), amount.to_string()])?;
         let mut vids: Vec<Video> = Vec::new();
         while let Some(row) = rows.next()? {

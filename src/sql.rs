@@ -76,7 +76,7 @@ pub const QUERY_GET_VOTES: &str = "SELECT video_id, score, round FROM votes JOIN
 pub const QUERY_GET_VOTES_THIS_ROUND: &str = "SELECT user_id, videos.category FROM votes JOIN videos ON videos.id = votes.video_id WHERE round = ?1 GROUP BY user_id";
 
 // ?1 - username
-pub const QUERY_GET_USER_HASH: &str = "SELECT salt, password_hash FROM admins WHERE user = ?1;";
+pub const QUERY_GET_USER_HASH: &str = "SELECT password_hash FROM admins WHERE user = ?1;";
 
 // ?1 round
 // ?2 - category
