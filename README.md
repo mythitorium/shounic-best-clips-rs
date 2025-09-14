@@ -8,4 +8,5 @@ The voting website to be used for shounic's upcoming best clip of the year conte
 - [ ] Frontend admin dashboard
 - [x] Server config endpoint
 - [ ] Database tables endpoint
-- [ ] Refactor state struct to not be so ass
+- [x] Refactor state struct to not be so ass
+- [ ] Re-write interactions with the database so it isn't so ass
