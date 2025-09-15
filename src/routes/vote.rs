@@ -215,7 +215,6 @@ pub fn handle_post(request: &Request, db: &mut Transaction, user: &User, state: 
                     }
                     let score = incoming_list.len() as i64 - 1 - index;
                     db.execute(QUERY_VOTE, [user.id, target, score, opponent, state.current_round(), vote_time])?;
-                    state.tally_score(id.clone(), score, state.current_round());
                     
                     index += 1;
                 }

@@ -19,8 +19,6 @@ pub struct State {
 
     // These values are not
     voter_cache: HashMap<i64, Vec<bool>>,
-    vote_total_cache: HashMap<i64, Tally>,
-    token_cache: Vec<String>,
     jwt_key_pair: ES256KeyPair
 }
 
@@ -28,16 +26,18 @@ pub struct State {
 #[derive(Serialize, Deserialize)]
 pub struct Config {
     voting_round: i64,
+    elimination_threshold: i64,
     videos_per_vote: i64,
     unix_deadline: i64,
     limit_votes: bool,
+    allow_voting: bool
 }
 
 
 impl Config {
     pub fn new() -> Config {
         toml::from_str(&fs::read_to_string(CONFIG_FILENAME).unwrap_or(".".to_string()))
-            .unwrap_or(Config { voting_round: 1, videos_per_vote: 2, unix_deadline: 0, limit_votes: false })
+            .unwrap_or(Config { voting_round: 1, videos_per_vote: 2, unix_deadline: 0, limit_votes: false, elimination_threshold: 9999, allow_voting: true })
     }
 
     pub fn save(&self) {
@@ -51,17 +51,9 @@ impl State {
         State { 
             config: Config::new(),
             voter_cache: HashMap::new(),
-            vote_total_cache: HashMap::new(),
-            token_cache: Vec::new(),
             jwt_key_pair: ES256KeyPair::generate()
         }
     }
-
-
-    pub fn tally_score(&mut self, video_id: i64, score: i64, round: i64) {
-        self.vote_total_cache.entry(video_id).and_modify(|tally| tally.tally_score(score, round)).or_insert(Tally::new());
-    }
-
     
     pub fn current_round(&self) -> i64 {
         self.config.voting_round
@@ -105,14 +97,7 @@ impl State {
                 });
         }
     }
-
-
-    pub fn set_voting_round(&mut self, new_round: i64) {
-        self.voter_cache.clear();
-        self.config.voting_round = new_round;
-        self.config.save();
-    }
-
+    
 
     pub fn set_videos_per_vote(&mut self, new_vote_size: i64) {
         self.config.videos_per_vote = new_vote_size;
@@ -132,11 +117,26 @@ impl State {
     }
 
 
+    pub fn allow_voting(&mut self, allow_voting: bool) {
+        self.config.allow_voting = allow_voting;
+    }
+
+
+    pub fn do_round_progression(&mut self, new_elimination_threshold: i64) {
+        // Apply/update parameters
+        self.config.elimination_threshold = new_elimination_threshold;
+        self.voter_cache.clear();
+        self.config.voting_round += 1;
+        self.config.save();
+
+        // Eliminate
+    }
+
+
     // Create a new session token
     pub fn generate_new_token(&mut self) -> Result<String, Error> {
         let claims = Claims::create(Duration::from_secs(30));
         let token = self.jwt_key_pair.sign(claims)?;
-        self.token_cache.push(token.clone());
         Ok(token)
     }
 
@@ -158,37 +158,37 @@ impl State {
 
 // This is a simple vote & winrate tracker which is used in the State's vote totals
 // It's a simple abstraction that makes updating vote totals and getting a winrate for a given video more ergonomic 
-pub struct Tally {
-    scores: HashMap<i64, HashMap<i64, i64>>
-}
-
-
-impl Tally {
-    pub fn new() -> Self {
-        Tally { scores: HashMap::new() }
-    }
-
-    // Returns a number rounded to three decimal places
-    pub fn ratio(&self, round: i64) -> f64 {
-        let mut total_tally_count = 0;
-        let mut total_score_amount = 0;
-        for (score_value, tally_total) in { &self.scores[&round] }.into_iter() {
-            total_tally_count += tally_total;
-            total_score_amount += tally_total * score_value;
-        }
-        ((total_score_amount as f64 / total_tally_count as f64) * 100.).round() / 100.
-        //((self.wins as f64 / (self.wins as f64 + self.losses as f64)) * 100. * 100.).round() / 100.
-    }
-
-    pub fn tally_score(&mut self, score: i64, round: i64) {
-        *self.scores
-            .entry(round)
-            .or_insert(HashMap::new())
-            .entry(score)
-            .or_insert(0)
-            += 1;
-    }
-}
+//pub struct Tally {
+//    scores: HashMap<i64, HashMap<i64, i64>>
+//}
+//
+//
+//impl Tally {
+//    pub fn new() -> Self {
+//        Tally { scores: HashMap::new() }
+//    }
+//
+//    // Returns a number rounded to three decimal places
+//    pub fn ratio(&self, round: i64) -> f64 {
+//        let mut total_tally_count = 0;
+//        let mut total_score_amount = 0;
+//        for (score_value, tally_total) in { &self.scores[&round] }.into_iter() {
+//            total_tally_count += tally_total;
+//            total_score_amount += tally_total * score_value;
+//        }
+//        ((total_score_amount as f64 / total_tally_count as f64) * 100.).round() / 100.
+//        //((self.wins as f64 / (self.wins as f64 + self.losses as f64)) * 100. * 100.).round() / 100.
+//    }
+//
+//    pub fn tally_score(&mut self, score: i64, round: i64) {
+//        *self.scores
+//            .entry(round)
+//            .or_insert(HashMap::new())
+//            .entry(score)
+//            .or_insert(0)
+//            += 1;
+//    }
+//}
 
 
 struct VoteLimiter {
