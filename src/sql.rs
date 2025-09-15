@@ -78,11 +78,14 @@ pub const QUERY_GET_VOTES_THIS_ROUND: &str = "SELECT user_id, videos.category FR
 // ?1 - username
 pub const QUERY_GET_USER_HASH: &str = "SELECT password_hash FROM admins WHERE user = ?1;";
 
+pub const QUERY_GET_VIDEOS_ORDERED_BY_RANK: &str = "
+";
+
 // ?1 round
 // ?2 - category
 // ?3 - amount
 // ?4 - offset
-pub const QUERY_FRONTEND_GET_VIDEO_DATA: &str = "
+pub const QUERY_FRONTEND_GET_RANKING_DATA: &str = "
     SELECT
         video_id,
         videos.youtube_id,
@@ -96,6 +99,17 @@ pub const QUERY_FRONTEND_GET_VIDEO_DATA: &str = "
     WHERE round = ?1 AND category = ?2
     GROUP BY video_id
     ORDER BY avg_score DESC
+    LIMIT ?3 OFFSET ?4
+";
+
+pub const QUERY_FRONTEND_GET_VIDEO_DATA: &str = "
+    SELECT
+        id,
+        youtube_id,
+        uploader_username,
+        is_eliminated,
+        is_disqualified
+    FROM videos
     LIMIT ?3 OFFSET ?4
 ";
 
