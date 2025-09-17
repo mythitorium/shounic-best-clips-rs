@@ -20,6 +20,6 @@ The voting website to be used for shounic's upcoming best clip of the year conte
   - [x] Implement automatic round increase
 - [x] Remove old tally system
 - [x] Replace all text responses with json ones
-- [ ] Implement the ability to disable voting
+- [x] Implement the ability to disable voting
 - [x] Clean up unused code
 
