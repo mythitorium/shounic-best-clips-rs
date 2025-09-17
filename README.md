@@ -7,7 +7,7 @@ The voting website to be used for shounic's upcoming best clip of the year conte
 - [ ] Voting frontend
 - [ ] Frontend admin dashboard
 - [x] server/config endpoint
-- [ ] server/tables endpoint
+- [x] server/tables endpoint
 - [x] Refactor state struct to not be so ass
 - [ ] Re-write interactions with the database so it isn't so ass
 - [x] Prevent voting round value from ever decreasing
@@ -22,4 +22,5 @@ The voting website to be used for shounic's upcoming best clip of the year conte
 - [x] Replace all text responses with json ones
 - [x] Implement the ability to disable voting
 - [x] Clean up unused code
+- [x] More payload validation
 
