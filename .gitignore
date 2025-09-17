@@ -1,7 +1,9 @@
 old code/*
+old code/
 target/*
 db/*
 www/old
+www/old/*
 Cargo.lock
 GUIDE.txt
 _main.rs
