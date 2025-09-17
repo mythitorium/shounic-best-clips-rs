@@ -67,6 +67,10 @@ struct OutgoingGetResponse { videos: Vec<Video>, c: i64, limit_reached: Vec<bool
 pub fn handle_get(request: &Request, db: &mut Transaction, user: &User, state: &mut State) -> Response {
     let IncomingGetResponse { c } = try_or_400!(rouille::input::json_input(request));
 
+    if !state.is_voting_allowed() {
+        Response::message_json("Voting isn't allowed at this time").with_status_code(423);
+    }
+
     let mut limit_reached = state.get_voter_record(user.id);
 
     let mut outgoing = OutgoingGetResponse { 
@@ -149,6 +153,10 @@ struct IncomingPostRequest { incoming_list: Vec<i64> }
 pub fn handle_post(request: &Request, db: &mut Transaction, user: &User, state: &mut State) -> Response {
     // Parse request
     let IncomingPostRequest { incoming_list } = try_or_400!(rouille::input::json_input(request));
+
+    if !state.is_voting_allowed() {
+        Response::message_json("Voting isn't allowed at this time").with_status_code(423);
+    }
     
     // Validate vote by comparing it against the user's active votes
     match || -> Result<Vec<(i64, i64)>, Error> {

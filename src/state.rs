@@ -16,6 +16,7 @@ use crate::sql::*;
 
 pub const NUMBER_OF_CATEGORIES: i64 = 2;
 const CONFIG_FILENAME: &str = "server_config.toml";
+const ALLOW_VOTING_BY_DEFAULT: bool = true;
 
 pub struct State {
     config: Config,
@@ -43,7 +44,7 @@ pub struct Config {
 impl Config {
     pub fn new() -> Config {
         toml::from_str(&fs::read_to_string(CONFIG_FILENAME).unwrap_or(".".to_string()))
-            .unwrap_or(Config { voting_round: 1, videos_per_vote: 2, unix_deadline: 0, limit_votes: false, elimination_threshold: 9999, allow_voting: true })
+            .unwrap_or(Config { voting_round: 1, videos_per_vote: 2, unix_deadline: 0, limit_votes: false, elimination_threshold: 9999, allow_voting: ALLOW_VOTING_BY_DEFAULT })
     }
 
     pub fn save(&self) {
@@ -88,6 +89,11 @@ impl State {
             return vec![false, false];
         }
         
+    }
+
+
+    pub fn is_voting_allowed(&self) -> bool {
+        return self.config.allow_voting;
     }
 
 
