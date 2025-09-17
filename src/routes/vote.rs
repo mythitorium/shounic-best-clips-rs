@@ -63,6 +63,7 @@ impl Video {
 //
 //
 
+
 #[derive(Deserialize)]
 struct IncomingGetResponse { c: i64 }
 
@@ -144,6 +145,7 @@ fn prep_votable_videos(db: &Transaction, mut category: i64, uid: i64, amount: i6
     return DbResult::Ok(videos);
 }
 
+
 //
 //
 //
@@ -151,6 +153,7 @@ fn prep_votable_videos(db: &Transaction, mut category: i64, uid: i64, amount: i6
 //
 //
 //
+
 
 #[derive(Deserialize)]
 struct IncomingPostRequest { incoming_list: Vec<i64> }
