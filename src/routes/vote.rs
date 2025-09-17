@@ -14,6 +14,7 @@ use rouille::Response;
 use serde::{Deserialize, Serialize};
 use crate::{routes::*, *};
 
+
 //
 //
 //
@@ -22,11 +23,13 @@ use crate::{routes::*, *};
 //
 //
 
+
 enum DbResult<T, E> {
     Ok(T),
     Err(E),
     Empty
 }
+
 
 impl<T, E> From<Result<T, E>> for DbResult<T, E> {
     fn from(item: Result<T, E>) -> Self {
@@ -44,11 +47,13 @@ struct Video {
     youtube_id: String
 }
 
+
 impl Video {
     pub fn new(id: i64, youtube_id: String) -> Self {
         Video { id: id, youtube_id: youtube_id }
     }
 }
+
 
 //
 //
@@ -61,15 +66,16 @@ impl Video {
 #[derive(Deserialize)]
 struct IncomingGetResponse { c: i64 }
 
+
 #[derive(Serialize, Debug)]
 struct OutgoingGetResponse { videos: Vec<Video>, c: i64, limit_reached: Vec<bool>, round: i64, current_deadline: i64 }
+
 
 pub fn handle_get(request: &Request, db: &mut Transaction, user: &User, state: &mut State) -> Response {
     let IncomingGetResponse { c } = try_or_400!(rouille::input::json_input(request));
 
-    if !state.is_voting_allowed() {
-        Response::message_json("Voting isn't allowed at this time").with_status_code(423);
-    }
+    if !state.is_voting_allowed() { Response::message_json("Voting isn't allowed at this time").with_status_code(423); }
+    if c < 0 || c > NUMBER_OF_CATEGORIES { Response::message_json("bad payload").with_status_code(400); }
 
     let mut limit_reached = state.get_voter_record(user.id);
 
@@ -154,9 +160,7 @@ pub fn handle_post(request: &Request, db: &mut Transaction, user: &User, state: 
     // Parse request
     let IncomingPostRequest { incoming_list } = try_or_400!(rouille::input::json_input(request));
 
-    if !state.is_voting_allowed() {
-        Response::message_json("Voting isn't allowed at this time").with_status_code(423);
-    }
+    if !state.is_voting_allowed() { Response::message_json("Voting isn't allowed at this time").with_status_code(423); }
     
     // Validate vote by comparing it against the user's active votes
     match || -> Result<Vec<(i64, i64)>, Error> {
