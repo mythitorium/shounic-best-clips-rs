@@ -12,7 +12,7 @@ use rouille::{try_or_400, Request};
 use rusqlite::{fallible_streaming_iterator::FallibleStreamingIterator, Error, Transaction};
 use rouille::Response;
 use serde::{Deserialize, Serialize};
-use crate::{sql::*, state::{State, NUMBER_OF_CATEGORIES}, User};
+use crate::{routes::*, *};
 
 //
 //
@@ -84,7 +84,7 @@ pub fn handle_get(request: &Request, db: &mut Transaction, user: &User, state: &
         },
         DbResult::Err(error) => {
             println!("{:?}", error);
-            return Response::text("Failed to fetch videos").with_status_code(500);
+            return Response::message_json("Failed to fetch videos").with_status_code(500);
         },
         DbResult::Empty => {
             return Response::json(&outgoing).with_status_code(204);
@@ -98,7 +98,7 @@ fn prep_votable_videos(db: &Transaction, mut category: i64, uid: i64, amount: i6
     let videos;
     match || -> Result<Vec<Video>, Error> {
         let mut stmt = db.prepare(QUERY_GET_NEW_VOTABLE_VIDEOS)?;
-        // If the category is 0, which signifies "any," modulate unix timestamp to semi randomly chose a category 
+        // If the category is 0, which signifies "any," modulate unix timestamp to pseudo-randomly choose a category 
         if category == 0 { category = (SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() % (NUMBER_OF_CATEGORIES as u128)) as i64 + 1; }
         let mut rows = stmt.query([category.to_string(), amount.to_string()])?;
         let mut vids: Vec<Video> = Vec::new();
@@ -130,18 +130,6 @@ fn prep_votable_videos(db: &Transaction, mut category: i64, uid: i64, amount: i6
             return DbResult::Err(err);
         }
     }
-
-    // I should be using params for this, but this method is easier
-    //let mut query = QUERY_SET_ACTIVE_VOTE_VALUELESS.to_string();
-    //let start_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
-    //for video in &videos {
-    //    query.push_str(format!("({}, {}, {}),", uid, video.id, start_time).as_str());
-    //}
-    //query.pop(); // remove the comma from the last insert item
-    //query.push_str(";"); // idk, just feels right to do
-    //if let Err(err) = db.execute(&query, []) {
-    //    return DbResult::Err(err);
-    //}
 
     return DbResult::Ok(videos);
 }
@@ -176,24 +164,24 @@ pub fn handle_post(request: &Request, db: &mut Transaction, user: &User, state: 
             //Validation
             if active_list.len() == 0 {
                 println!("Invalid vote attempt: User has no active votes, but attempted to submit something anyway: {:?}", incoming_list);
-                return Response::text("Vote submitted").with_status_code(200);
+                return Response::message_json("Vote submitted").with_status_code(200);
             }
 
             for (id, _) in &active_list {
                 if !incoming_list.contains(id) {
                     println!("Invalid vote attempt: Vote does not match user's active vote: Submitted: {:?}, expected {:?}", incoming_list, active_list);
-                    return Response::text("Vote submitted").with_status_code(200);
+                    return Response::message_json("Vote submitted").with_status_code(200);
                 }
             }
 
             if incoming_list.len() != active_list.len() {
                 println!("Invalid vote attempt: Length does not match user's active_vote: Submitted: {}, expected: {}", incoming_list.len(), active_list.len());
-                return Response::text("Vote submitted").with_status_code(200);
+                return Response::message_json("Vote submitted").with_status_code(200);
             }
 
             if user.vote_banned {
                 println!("Invalid vote attempt: This user has been shadow banned");
-                return Response::text("Vote submitted").with_status_code(200);
+                return Response::message_json("Vote submitted").with_status_code(200);
             }
             
             let vote_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as i64;
@@ -223,13 +211,13 @@ pub fn handle_post(request: &Request, db: &mut Transaction, user: &User, state: 
 
                 Ok(())
             }() {
-                return Response::text("Failed while casting vote").with_status_code(500);
+                return Response::message_json("Failed while casting vote").with_status_code(500);
             }
         },
         Err(_) => {
-            return Response::text("Failed while trying to validate vote").with_status_code(500);
+            return Response::message_json("Failed while trying to validate vote").with_status_code(500);
         }
     }
     
-    Response::text("Vote submitted").with_status_code(200)
+    Response::message_json("Vote submitted").with_status_code(200)
 }

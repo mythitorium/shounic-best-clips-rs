@@ -6,6 +6,9 @@
 
 use std::{collections::HashMap, fs::{self, File}, hash::Hash, time::{SystemTime, UNIX_EPOCH}};
 use jwt_simple::{prelude::*, Error};
+use rusqlite::Transaction;
+
+use crate::sql::*;
 
 // This is the server state. It stores configuration and handles any caching that's best done outside a database
 //
@@ -19,8 +22,11 @@ pub struct State {
 
     // These values are not
     voter_cache: HashMap<i64, Vec<bool>>,
-    jwt_key_pair: ES256KeyPair
+    jwt_key_pair: ES256KeyPair,
 }
+
+
+struct Tally { pub total_votes: i64, pub total_score: i64 }
 
 
 #[derive(Serialize, Deserialize)]
@@ -122,14 +128,31 @@ impl State {
     }
 
 
-    pub fn do_round_progression(&mut self, new_elimination_threshold: i64) {
+    pub fn do_round_progression(&mut self, db: &mut Transaction, new_elimination_threshold: i64) {
         // Apply/update parameters
         self.config.elimination_threshold = new_elimination_threshold;
-        self.voter_cache.clear();
         self.config.voting_round += 1;
         self.config.save();
 
         // Eliminate
+        for i in 0..NUMBER_OF_CATEGORIES {
+            db.execute(QUERY_ELIMINATE_VIDEOS, [i, self.current_round(), i, new_elimination_threshold]);
+        }
+
+        self.voter_cache.clear();
+    }
+
+
+    //pub fn tally_vote(&mut self, id: i64, score: i64) {
+    //    self.tally_cache
+    //        .entry(id)
+    //        .and_modify(|tally| { tally.total_votes += 1; tally.total_score += score; })
+    //        .or_insert(Tally { total_score: score, total_votes: 1});
+    //}
+
+
+    pub fn eliminate_videos(&mut self, db: &mut Transaction, threshold: i64) {
+
     }
 
 
@@ -152,53 +175,5 @@ impl State {
 
     pub fn config(&self) -> &Config {
         return &self.config;
-    }
-}
-
-
-// This is a simple vote & winrate tracker which is used in the State's vote totals
-// It's a simple abstraction that makes updating vote totals and getting a winrate for a given video more ergonomic 
-//pub struct Tally {
-//    scores: HashMap<i64, HashMap<i64, i64>>
-//}
-//
-//
-//impl Tally {
-//    pub fn new() -> Self {
-//        Tally { scores: HashMap::new() }
-//    }
-//
-//    // Returns a number rounded to three decimal places
-//    pub fn ratio(&self, round: i64) -> f64 {
-//        let mut total_tally_count = 0;
-//        let mut total_score_amount = 0;
-//        for (score_value, tally_total) in { &self.scores[&round] }.into_iter() {
-//            total_tally_count += tally_total;
-//            total_score_amount += tally_total * score_value;
-//        }
-//        ((total_score_amount as f64 / total_tally_count as f64) * 100.).round() / 100.
-//        //((self.wins as f64 / (self.wins as f64 + self.losses as f64)) * 100. * 100.).round() / 100.
-//    }
-//
-//    pub fn tally_score(&mut self, score: i64, round: i64) {
-//        *self.scores
-//            .entry(round)
-//            .or_insert(HashMap::new())
-//            .entry(score)
-//            .or_insert(0)
-//            += 1;
-//    }
-//}
-
-
-struct VoteLimiter {
-    pub enabled: bool,
-    pub cache: HashMap<i64, Vec<bool>>
-}
-
-
-impl VoteLimiter {
-    pub fn new() -> Self {
-        VoteLimiter { enabled: false, cache: HashMap::new() }
     }
 }

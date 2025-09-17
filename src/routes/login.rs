@@ -11,7 +11,7 @@ use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use rouille::{try_or_400, Request};
 use rusqlite::{Error, Transaction};
 use rouille::Response;
-use crate::{sql::QUERY_GET_USER_HASH, state::State, User};
+use crate::{routes::*, *};
 
 //
 //
@@ -48,20 +48,20 @@ pub fn handle_get(request: &Request, db: &mut Transaction, _user: &User, state: 
                         if let Ok(token) = state.generate_new_token() {
                             return Response::json(&OutgoingGetResponse { token: token });
                         } else {
-                            return Response::text("Internal auth failure").with_status_code(500);
+                            return Response::message_json("Internal auth failure").with_status_code(500);
                         }
                     } else {
-                        return Response::text("Incorrect password").with_status_code(401);
+                        return Response::message_json("Incorrect password").with_status_code(401);
                     }
                 }
             },
             Err(error) => {
                 match error {
-                    Error::QueryReturnedNoRows => { return Response::text("User does not exist").with_status_code(401); },
-                    _ => { return Response::text("Internal database failure").with_status_code(500); }
+                    Error::QueryReturnedNoRows => { return Response::message_json("User does not exist").with_status_code(401); },
+                    _ => { return Response::message_json("Internal database failure").with_status_code(500); }
                 }
             }
         }
     
-        Response::text("Internal failure").with_status_code(500)
+        Response::message_json("Internal failure").with_status_code(500)
 }

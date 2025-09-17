@@ -15,6 +15,7 @@ mod routes;
 
 use sql::*;
 use state::*;
+use routes::MessageJson;
 
 use rouille::{self, router};
 use std::error::Error as StdError;
@@ -62,30 +63,11 @@ fn main() {
 
         // Setup database tables and pragmas
         db.execute_batch(QUERY_SETUP).expect("Failed to initialize database");
-
+        
         // Generate voter record cache
-        match build_voter_record(&db, &mut state) {
-            Ok(_) => {
-                println!("Voter records loaded.");
-            },
-            Err(error) => {
-                println!("Failed to build voter record on initialization");
-                println!("Reason: {:?}", error);
-                return;
-            }
-        }
+        build_voter_record(&db, &mut state).expect("Failed to build voter cache");
 
-        // Cache vote totals to the state
-        //match tally_votes(&db, &mut state) {
-        //    Ok(_) => {
-        //        println!("Vote tallies loaded.");
-        //    },
-        //    Err(error) => {
-        //        println!("Failed to tally votes on initialization");
-        //        println!("Reason: {:?}", error);
-        //        return;
-        //    }
-        //}
+        println!("Initialization complete");
     }
 
     // Spawn coroutine thread
@@ -97,6 +79,7 @@ fn main() {
         }
     });
 
+    println!("Starting server...");
     println!("");
 
     // Start server
@@ -142,7 +125,7 @@ fn main() {
             },
             Err(ip) => {
                 cached_ip = ip;
-                response = Response::text("Error while handling IP").with_status_code(500);
+                response = Response::message_json("Error while handling IP").with_status_code(500);
             }
         }
 
@@ -201,21 +184,6 @@ fn log_outgoing(ip: String, start_time: Instant, response: &Response, path: Stri
         path
     );
 }
-
-
-// Tally votes
-// TODO: Explain what this does in detail
-//fn tally_votes(db : &Connection, state: &mut State) -> Result<(), Error> {
-//    let mut stmt = db.prepare(QUERY_GET_VOTES)?;
-//    let rows = stmt.query_map([], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)))?;
-//
-//    for row in rows {
-//        let (video_id, score, round) = row?;
-//        state.tally_score(video_id, score, round);
-//    }
-//
-//    Ok(())
-//}
 
 
 // Build voter cache

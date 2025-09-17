@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use rouille::{try_or_400, Request};
 use rusqlite::{Rows, Transaction, Error};
 use rouille::Response;
-use crate::{sql::{QUERY_FRONTEND_GET_RANKING_DATA, QUERY_FRONTEND_GET_REPORT_DATA, QUERY_FRONTEND_GET_USER_DATA, QUERY_FRONTEND_GET_VIDEO_DATA}, state::State, User};
+use crate::{routes::*, *};
 
 
 //
@@ -63,7 +63,8 @@ const ROWS_PER_PAGE: i64 = 200;
 pub fn handle_get(request: &Request, db: &mut Transaction, _user: &User, state: &mut State) -> Response {
     let IncomingGetRequest { token, page, table, round, category } = try_or_400!(rouille::input::json_input(request));
 
-    if !state.validate_token(&token) { return Response::text("bad credentials").with_status_code(401); }
+    if !state.validate_token(&token) { return Response::message_json("bad credentials").with_status_code(401); }
+    if round < 1 || category < 1 || category > NUMBER_OF_CATEGORIES || page < 1 { return Response::message_json("bad payload").with_status_code(400); } 
 
     let mut real_rows: Vec<Vec<String>> = Vec::new();
 
@@ -132,7 +133,7 @@ enum Action {
 pub fn handle_post(request: &Request, _db: &mut Transaction, _user: &User, state: &mut State) -> Response {
     let IncomingPostRequest { token, target_id, table, action_type, action_outcome } = try_or_400!(rouille::input::json_input(request));
 
-    if !state.validate_token(&token) { return Response::text("bad credentials").with_status_code(401); }
+    if !state.validate_token(&token) { return Response::message_json("bad credentials").with_status_code(401); }
 
     match action_type {
         Action::VideoDisqualify => {

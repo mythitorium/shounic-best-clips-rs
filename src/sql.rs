@@ -12,44 +12,11 @@ pub const QUERY_LOG_USER: &str = "INSERT OR IGNORE INTO users(ip, vote_banned, r
 // ?1 - ip address
 pub const QUERY_GET_USER_ID: &str = "SELECT id, vote_banned, report_banned FROM users WHERE ip = ?1";
 
-// ?1 - ip address
-pub const QUERY_LOG_USER_RETURN_UID: &str = "INSERT OR IGNORE INTO users(ip) VALUES (?1) RETURNING id;";
-
-// ?1 - category being filtered for
-// ?2 - the amount
-//pub const QUERY_GET_NEW_VOTABLE_VIDEOS: &str = "
-//    SELECT id, youtube_id FROM  videos
-//        WHERE id NOT IN (SELECT id FROM culled_videos WHERE videos.id = culled_videos.video_id) 
-//        AND id NOT IN (SELECT id FROM disqualified_videos WHERE videos.id = disqualified_videos.video_id) 
-//        AND category = ?1
-//        ORDER BY random() LIMIT ?2
-//";
-
 // ?1 - category being filtered for
 // ?2 - the amount
 pub const QUERY_GET_NEW_VOTABLE_VIDEOS: &str = "
     SELECT id, youtube_id FROM videos WHERE is_eliminated = 0 AND is_disqualified = 0 AND category = ?1 ORDER BY random() LIMIT ?2
 ";
-
-pub const QUERY_GET_NEW_VOTABLE_VIDEOS_ACCOUNTING_FOR_LIMIT: &str = "
-    SELECT id, youtube_id 
-    FROM videos 
-    WHERE 
-        is_eliminated = 0 
-        AND is_disqualified = 0 
-        AND category = ?1 
-        AND id NOT IN (SELECT id FROM votes WHERE user_id = ?2 AND round = ?3 AND category = ?4)
-    ORDER BY random() LIMIT ?5
-";
-
-// ?1 - user id
-// ?2 - video 1
-// ?3 - start time in unix
-// ?4 - category
-pub const QUERY_SET_ACTIVE_VOTE: &str = "INSERT INTO active_votes(user_id, video_id, start_time, category) VALUES (?1, ?2, ?3, ?4)";
-
-// same as 'QUERY_SET_ACTIVE_2_VOTE' but it's set up to be dynamically modified depending on the amount of active votes being casted
-//pub const QUERY_SET_ACTIVE_VOTE_VALUELESS: &str = "INSERT INTO active_votes(user_id, video_id, start_time) VALUES "; // `+ '({id}, {vid1}, {vid2}, {time})'`, for example
 
 // ?1 - user id
 // ?2 - winning video id
@@ -60,26 +27,41 @@ pub const QUERY_SET_ACTIVE_VOTE: &str = "INSERT INTO active_votes(user_id, video
 pub const QUERY_VOTE: &str = "INSERT INTO votes(user_id, video_id, score, opponent_video_id, round, vote_time) VALUES (?1, ?2, ?3, ?4, ?5, ?6)";
 
 // ?1 - user id
+// ?2 - video 1
+// ?3 - start time in unix
+// ?4 - category
+pub const QUERY_SET_ACTIVE_VOTE: &str = "INSERT INTO active_votes(user_id, video_id, start_time, category) VALUES (?1, ?2, ?3, ?4)";
+
+// ?1 - user id
 pub const QUERY_CLEAR_ACTIVE_VOTES: &str = "DELETE FROM active_votes WHERE user_id = ?1";
 
 // ?1 - user id
 pub const QUERY_GET_ACTIVE_VOTE_VIDEOS: &str = "SELECT id, category FROM videos JOIN active_votes ON active_votes.video_id = videos.id WHERE active_votes.user_id = ?1;";
-
-// ?1 - user id
-// ?2 - round
-// ?3 - category
-// RUC = Round User Category
-pub const QUERY_GET_RUC_VOTE_TOTAL: &str = "SELECT id FROM votes WHERE user_id = ?1 AND round = ?2 AND category = ?3";
-
-pub const QUERY_GET_VOTES: &str = "SELECT video_id, score, round FROM votes JOIN videos ON votes.video_id = videos.id WHERE videos.is_disqualified = 0;";
 
 pub const QUERY_GET_VOTES_THIS_ROUND: &str = "SELECT user_id, videos.category FROM votes JOIN videos ON videos.id = votes.video_id WHERE round = ?1 GROUP BY user_id";
 
 // ?1 - username
 pub const QUERY_GET_USER_HASH: &str = "SELECT password_hash FROM admins WHERE user = ?1;";
 
-pub const QUERY_GET_VIDEOS_ORDERED_BY_RANK: &str = "
-";
+// ?1 - category
+// ?2 - round
+// ?3 - category
+// ?4 - elimination threshold
+pub const QUERY_ELIMINATE_VIDEOS: &str = "
+	UPDATE videos 
+    SET is_eliminated = 1 
+    WHERE category = ?1 AND id NOT IN (
+        SELECT video_id 
+        FROM votes 
+		JOIN videos ON videos.id = votes.video_id
+        WHERE round = ?2 AND videos.category = ?3 AND opponent_video_id NOT IN (
+            SELECT id FROM videos WHERE is_disqualified = 1
+        )
+        GROUP BY video_id
+        ORDER BY AVG(score) DESC
+		LIMIT ?4
+    );
+"; 
 
 // ?1 round
 // ?2 - category
@@ -102,6 +84,8 @@ pub const QUERY_FRONTEND_GET_RANKING_DATA: &str = "
     LIMIT ?3 OFFSET ?4
 ";
 
+// ?1 - amount
+// ?2 - offset
 pub const QUERY_FRONTEND_GET_VIDEO_DATA: &str = "
     SELECT
         id,
@@ -186,7 +170,9 @@ pub const QUERY_SETUP: &str = { "
         salt TEXT,
         password_hash TEXT
     );
-           
+" };
+
+pub const QUERY_INSERT_PLACEHOLDER_VIDEOS: &str = "
     INSERT INTO videos (youtube_id, uploader_username, category, is_eliminated, is_disqualified)
     SELECT * FROM (VALUES
     	('WRRC-Iw_OPg', 'user1', 1, 0, 0),
@@ -207,4 +193,26 @@ pub const QUERY_SETUP: &str = { "
     	('0pnwE_Oy5WI', 'user16', 2, 0, 0)
     )
     WHERE NOT EXISTS (SELECT * FROM videos);
-" };
+";
+
+pub const QUERY_INSERT_ROUND_OF_FAKE_VOTES: &str = "
+    INSERT INTO votes(user_id, video_id, score, opponent_video_id, round, vote_time) VALUES
+        (1, 1,  0, 9, 1, 0),
+        (1, 2,  1, 8, 1, 0),
+        (1, 3,  0, 7, 1, 0),
+        (1, 4,  0, 6, 1, 0),
+        (1, 5,  0, 4, 1, 0),
+        (1, 4,  1, 5, 1, 0),
+        (1, 6,  1, 4, 1, 0),
+        (1, 7,  1, 3, 1, 0),
+        (1, 8,  0, 2, 1, 0),
+        (1, 9,  1, 1, 1, 0),
+        (1, 10, 0, 16, 1, 0),
+        (1, 11, 1, 15, 1, 0),
+        (1, 12, 1, 14, 1, 0),
+        (1, 12, 0, 13, 1, 0),
+        (1, 13, 1, 12, 1, 0),
+        (1, 14, 0, 12, 1, 0),
+        (1, 15, 0, 11, 1, 0),
+        (1, 16, 1, 10, 1, 0);
+";
