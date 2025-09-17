@@ -27,6 +27,7 @@ struct IncomingGetRequest {
     token: String,
 }
 
+
 pub fn handle_get(request: &Request, _db: &mut Transaction, _user: &User, state: &mut State) -> Response {
     let IncomingGetRequest { token} = try_or_400!(rouille::input::json_input(request));
 
