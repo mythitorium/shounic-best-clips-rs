@@ -141,7 +141,7 @@ impl State {
         self.config.save();
 
         // Eliminate
-        for i in 0..NUMBER_OF_CATEGORIES {
+        for i in 1..=NUMBER_OF_CATEGORIES {
             db.execute(QUERY_ELIMINATE_VIDEOS, [i, self.current_round(), i, new_elimination_threshold]);
         }
 
