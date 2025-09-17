@@ -14,13 +14,12 @@ The voting website to be used for shounic's upcoming best clip of the year conte
 - [x] Make server/tables endpoint target single rows only
 - [ ] Figure out how tf raw submissions are going to be handled
 - [x] Remove token_cache 
-- [ ] Implement a new config parameter for controlling eliminations
-  - [ ] Consider a staggered thread-based cull
-  - [ ] Endpoint handling 
-  - [ ] Database
+- [x] Implement a new config parameter for controlling eliminations
+  - [x] Endpoint handling 
+  - [x] Database
   - [x] Implement automatic round increase
 - [x] Remove old tally system
-- [ ] Replace all text responses with json ones
+- [x] Replace all text responses with json ones
 - [ ] Implement the ability to disable voting
-- [ ] Clean up unused code
+- [x] Clean up unused code
 
