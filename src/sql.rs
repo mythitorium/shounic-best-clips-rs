@@ -110,6 +110,23 @@ pub const QUERY_FRONTEND_GET_REPORT_DATA: &str = "
     LIMIT ?1 OFFSET ?2
 ";
 
+// ?1 - what to set it to
+// ?2 - id
+pub const QUERY_DISQUALIFY_VIDEO: &str = "UPDATE videos SET is_disqualified = ?1 WHERE id = ?2";
+
+// ?1 - what to set it to
+// ?2 - id
+pub const QUERY_VOTE_BAN_USER: &str = "UPDATE users SET vote_banned = ?1 WHERE id = ?2";
+
+// ?1 - what to set it to
+// ?2 - id
+pub const QUERY_REPORT_BAN_USER: &str = "UPDATE users SET report_banned = ?! WHERE id = ?2";
+ 
+// ?1 - what to set it to
+// ?2 - id
+pub const QUERY_MARK_REPORT_RESOLVED: &str = "UPDATE reports SET resolved = ?1 WHERE id = ?2";
+
+
 pub const QUERY_SETUP: &str = { "
     PRAGMA cache_size = 300000;
     PRAGMA page_size = 16384;
@@ -172,6 +189,7 @@ pub const QUERY_SETUP: &str = { "
     );
 " };
 
+
 pub const QUERY_INSERT_PLACEHOLDER_VIDEOS: &str = "
     INSERT INTO videos (youtube_id, uploader_username, category, is_eliminated, is_disqualified)
     SELECT * FROM (VALUES
@@ -194,6 +212,7 @@ pub const QUERY_INSERT_PLACEHOLDER_VIDEOS: &str = "
     )
     WHERE NOT EXISTS (SELECT * FROM videos);
 ";
+
 
 pub const QUERY_INSERT_ROUND_OF_FAKE_VOTES: &str = "
     INSERT INTO votes(user_id, video_id, score, opponent_video_id, round, vote_time) VALUES

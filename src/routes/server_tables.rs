@@ -119,7 +119,6 @@ pub fn handle_get(request: &Request, db: &mut Transaction, _user: &User, state: 
 struct IncomingPostRequest {
     token: String,
     target_id: i64,
-    table: Table,
     action_type: Action,
     action_outcome: bool
 }
@@ -135,26 +134,31 @@ enum Action {
 }
 
 
-pub fn handle_post(request: &Request, _db: &mut Transaction, _user: &User, state: &mut State) -> Response {
-    let IncomingPostRequest { token, target_id, table, action_type, action_outcome } = try_or_400!(rouille::input::json_input(request));
+pub fn handle_post(request: &Request, db: &mut Transaction, _user: &User, state: &mut State) -> Response {
+    let IncomingPostRequest { token, target_id, action_type, action_outcome } = try_or_400!(rouille::input::json_input(request));
 
     if !state.validate_token(&token) { return Response::message_json("bad credentials").with_status_code(401); }
+    if target_id < 0 { return Response::message_json("bad payload").with_status_code(400); }
 
-    match action_type {
-        Action::VideoDisqualify => {
-
-        },
-        Action::UserVoteBan => {
-
-        },
-        Action::UserReportBan => {
-
-        },
-        Action::ReportResolve => {
-
+    if let Ok(_) = || -> Result<(), Error> {
+        match action_type {
+            Action::VideoDisqualify => {
+                db.execute(QUERY_DISQUALIFY_VIDEO, [action_outcome as i64, target_id])?;
+            },
+            Action::UserVoteBan => {
+                db.execute(QUERY_VOTE_BAN_USER, [action_outcome as i64, target_id])?;
+            },
+            Action::UserReportBan => {
+                db.execute(QUERY_REPORT_BAN_USER, [action_outcome as i64, target_id])?;
+            },
+            Action::ReportResolve => {
+                db.execute(QUERY_MARK_REPORT_RESOLVED, [action_outcome as i64, target_id])?;
+            }
         }
+        Ok(())
+    }() {
+        return Response::message_json("row updated").with_status_code(200);
+    } else {
+        return Response::message_json("internal failure").with_status_code(500);
     }
-
-
-    Response::empty_404()
 }
