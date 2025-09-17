@@ -66,36 +66,41 @@ pub fn handle_get(request: &Request, db: &mut Transaction, _user: &User, state: 
     if !state.validate_token(&token) { return Response::message_json("bad credentials").with_status_code(401); }
     if round < 1 || category < 1 || category > NUMBER_OF_CATEGORIES || page < 1 { return Response::message_json("bad payload").with_status_code(400); } 
 
-    let mut real_rows: Vec<Vec<String>> = Vec::new();
+    match || -> Result<Vec<Vec<String>>, Error> {
+        let mut real_rows = Vec::new();
 
-    // Prepare statement
-    let mut stmt= db.prepare({
-        match table {
-            Table::Users => QUERY_FRONTEND_GET_USER_DATA,
-            Table::Videos => QUERY_FRONTEND_GET_VIDEO_DATA,
-            Table::Rankings => QUERY_FRONTEND_GET_RANKING_DATA,
-            Table::Reports => QUERY_FRONTEND_GET_REPORT_DATA,
-        }
-    }).unwrap();
-
-    // Apply params and execute
-    let mut rows = match table {
-        Table::Users => stmt.query([page.to_string(), ((page-1)*ROWS_PER_PAGE).to_string()]).unwrap(),
-        Table::Videos => stmt.query([page.to_string(), ((page-1)*ROWS_PER_PAGE).to_string()]).unwrap(),
-        Table::Rankings => stmt.query([round.to_string(), category.to_string(), page.to_string(), ((page-1)*ROWS_PER_PAGE).to_string()]).unwrap(),
-        Table::Reports => stmt.query([page.to_string(), ((page-1)*ROWS_PER_PAGE).to_string()]).unwrap()
-    };
-
-    // Process data. Turn everything into a string who fucking cares
-    while let Some(row) = rows.next().unwrap_or(None) { 
-        let mut real_row: Vec<String> = Vec::new();
-            for i in 0..TABLE_CELL_AMOUNTS[table.clone() as usize] {
-                real_row.push(row.get(i).unwrap_or("".to_string()));
+            // Prepare statement
+        let mut stmt= db.prepare({
+            match table {
+                Table::Users => QUERY_FRONTEND_GET_USER_DATA,
+                Table::Videos => QUERY_FRONTEND_GET_VIDEO_DATA,
+                Table::Rankings => QUERY_FRONTEND_GET_RANKING_DATA,
+                Table::Reports => QUERY_FRONTEND_GET_REPORT_DATA,
             }
-        real_rows.push(real_row); 
-    };
+        })?;
 
-    return Response::json(&real_rows).with_status_code(200);
+        // Apply params and execute
+        let mut rows = match table {
+            Table::Users => stmt.query([page.to_string(), ((page-1)*ROWS_PER_PAGE).to_string()])?,
+            Table::Videos => stmt.query([page.to_string(), ((page-1)*ROWS_PER_PAGE).to_string()])?,
+            Table::Rankings => stmt.query([round.to_string(), category.to_string(), page.to_string(), ((page-1)*ROWS_PER_PAGE).to_string()])?,
+            Table::Reports => stmt.query([page.to_string(), ((page-1)*ROWS_PER_PAGE).to_string()])?
+        };
+
+        // Process data. Turn everything into a string who fucking cares
+        while let Some(row) = rows.next().unwrap_or(None) { 
+            let mut real_row: Vec<String> = Vec::new();
+                for i in 0..TABLE_CELL_AMOUNTS[table.clone() as usize] {
+                    real_row.push(row.get(i).unwrap_or("".to_string()));
+                }
+            real_rows.push(real_row); 
+        };
+
+        Ok(real_rows)
+    }() {
+        Ok(real_rows) => return Response::json(&real_rows).with_status_code(200),
+        Err(err) => return Response::message_json("internal failure").with_status_code(500)
+    }
 
     Response::empty_404()
 }
