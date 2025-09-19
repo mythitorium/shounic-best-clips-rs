@@ -1,0 +1,248 @@
+body {
+  background-color: #304654;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  border: none;
+  display: grid;
+}
+
+html {
+  margin: 0;
+  border: none;
+  height: 100%;
+  flex: 1;
+}
+
+p, li, td, tr, label {
+  color: #e9f1f5;
+  font-size: 16px;
+  font-family: Arial;
+  padding: 0;
+  margin: 0;
+  font-size: 20px;
+}
+
+h2 {
+  color: #e9f1f5;
+  font-size: 24px;
+  font-family: Arial;
+  text-align: left;
+  padding: 8px;
+  margin: 0;
+  padding-left: 20px;
+}
+
+button {
+  color: #e9f1f5;
+  font-size: 20px;
+  font-family: Arial;
+  box-shadow: none;
+  border: none;
+  background-color: #27333b;
+  border-radius: 10px;
+}
+
+svg {
+  position: relative;
+  fill: #27333b;
+  z-index: 0;
+}
+
+body {
+  grid-template-rows: 60px 1fr 60px 50px max-content max-content 1fr;
+  grid-template-columns: 1fr minmax(600px, 1600px) 1fr;
+  grid-template-areas: "h h     h" ". .     ." ". tlBar ." ". cgBar ." ". vBody ." ". gdBox ." ". .     .";
+  row-gap: 35px;
+  column-gap: 20px;
+}
+
+#headerBox {
+  grid-area: h;
+  background-color: #27333b;
+  padding-left: 20px;
+  padding-right: 10px;
+  display: grid;
+  align-content: center;
+  justify-content: left;
+}
+#headerBox > p {
+  width: 100%;
+  text-align: left;
+}
+
+#stageBox {
+  grid-area: tlBar;
+  display: grid;
+  grid-template-columns: 1fr repeat(3, 190px) 1fr;
+  grid-template-rows: 1fr;
+  grid-template-areas: ". f s e .";
+}
+
+#stageBox > div {
+  padding: 0;
+  display: grid;
+  border-radius: 5px;
+  position: relative;
+}
+
+#stageBox > div > svg {
+  position: absolute;
+  left: 100%;
+  stroke-width: 2px;
+  width: 34px;
+  height: 34px;
+  z-index: 1;
+}
+
+#stage1Box {
+  grid-area: f;
+}
+
+#stage2Box {
+  grid-area: s;
+}
+
+#stage3Box {
+  grid-area: e;
+}
+
+#categorySelectionBox {
+  grid-area: cgBar;
+  display: grid;
+  grid-template-columns: 1fr repeat(3, 160px) 1fr;
+  column-gap: 15px;
+  grid-template-rows: 1fr;
+  grid-template-areas: ". f s e .";
+}
+
+.stageFlagDefault {
+  background-color: rgb(54, 79, 94);
+  border: 2px solid #27333b;
+  margin: 10px;
+  grid-template-rows: 1fr min-content 1fr 0px;
+  grid-template-areas: "." "t" "." "arrow";
+}
+.stageFlagDefault > p:nth-child(1) {
+  color: rgba(233, 241, 245, 0.6509803922);
+}
+.stageFlagDefault > svg {
+  top: 1px;
+  stroke: #27333b;
+  fill: rgb(54, 79, 94);
+}
+.stageFlagDefault > p:nth-child(1) {
+  grid-area: t;
+  text-align: center;
+}
+
+.stageFlagActive {
+  background-color: #283a46;
+  border: 2px solid rgb(96, 127, 146);
+  margin: 0;
+  grid-template-rows: 1fr min-content 4px min-content 1fr 0px;
+  grid-template-areas: "." "t" "." "c" "." "arrow";
+}
+.stageFlagActive > p:nth-child(2) {
+  color: rgba(233, 241, 245, 0.6509803922);
+}
+.stageFlagActive > svg {
+  top: 11px;
+  stroke: rgb(96, 127, 146);
+  fill: #283a46;
+}
+.stageFlagActive > p {
+  text-align: center;
+}
+.stageFlagActive > p:nth-child(1) {
+  grid-area: t;
+}
+.stageFlagActive > p:nth-child(2) {
+  grid-area: c;
+  font-size: 18px;
+}
+
+#categorySelectionBox > button:nth-child(1) {
+  grid-area: f;
+  overflow: visible;
+}
+
+#categorySelectionBox > button:nth-child(2) {
+  grid-area: s;
+  overflow: visible;
+}
+
+#categorySelectionBox > button:nth-child(3) {
+  grid-area: e;
+  overflow: visible;
+}
+
+#votingBox {
+  grid-area: vBody;
+}
+
+#infoAndHelpBox {
+  grid-area: gdBox;
+}
+
+#votingBlock2Size {
+  display: grid;
+  grid-template-rows: max-content 50px 25px;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas: "vid1 vid2" "vote1 vote2" "err err";
+  row-gap: 20px;
+  column-gap: 20px;
+}
+
+#votingBlock2Size > #embedBox1 {
+  display: grid;
+  justify-content: center;
+  align-content: center;
+  aspect-ratio: 16/9;
+  width: 100%;
+  background-color: rgb(54, 79, 94);
+  overflow: hidden;
+  grid-area: vid1;
+}
+
+#votingBlock2Size > #embedBox2 {
+  display: grid;
+  justify-content: center;
+  align-content: center;
+  aspect-ratio: 16/9;
+  width: 100%;
+  background-color: rgb(54, 79, 94);
+  overflow: hidden;
+  grid-area: vid2;
+}
+
+#votingBlock2Size > div:nth-child(3) {
+  display: grid;
+  grid-template-columns: 1fr 200px 1fr;
+  grid-template-rows: 1fr;
+  grid-template-areas: ". b .";
+  grid-area: vote1;
+}
+
+#votingBlock2Size > div:nth-child(4) {
+  display: grid;
+  grid-template-columns: 1fr 200px 1fr;
+  grid-template-rows: 1fr;
+  grid-template-areas: ". b .";
+  grid-area: vote2;
+}
+
+#votingBlock2Size > div:nth-child(3) > button {
+  grid-area: b;
+}
+
+#votingBlock2Size > div:nth-child(4) > button {
+  grid-area: b;
+}
+
+#votingBlock2Size > div:nth-child(5) {
+  grid-area: err;
+}
+
+/*# sourceMappingURL=voting.css.map */

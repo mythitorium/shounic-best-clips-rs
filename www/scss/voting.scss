@@ -1,0 +1,213 @@
+@use 'base';
+
+
+//
+// Variables
+//
+
+
+$stage-box-default-size: 40px;
+$stage-box-active-size: 60px;
+$stage-box-svg-w: 34px;
+$stage-box-svg-h: 34px;
+
+
+//
+// Mixins
+//
+
+
+@mixin embedArea() {
+    display: grid;
+    justify-content: center;
+    align-content: center;
+    aspect-ratio: 16/9;
+    width: 100%;
+    background-color: base.$color-light-bg;
+    overflow: hidden;
+}
+
+@mixin voteButtonGrid() {
+    display: grid;
+    grid-template-columns: 1fr 200px 1fr;
+    grid-template-rows: 1fr;
+    grid-template-areas: ". b .";
+}
+
+@mixin stageBoxDefaultStyle() {
+    background-color: base.$color-light-bg;
+    border: 2px solid base.$color-dark-bg;
+    > p:nth-child(1) {
+        color: base.$color-text-faded;
+    }
+    > svg {
+        top: calc(($stage-box-default-size/2) - ($stage-box-svg-h/2) - 2px);
+        stroke: base.$color-dark-bg;
+        fill: base.$color-light-bg; 
+    }
+}
+
+@mixin stageBoxActiveStyle() {
+    background-color: base.$color-semi-dark-bg;
+    border: 2px solid base.$color-very-light-bg;
+    > p:nth-child(2) {
+        color: base.$color-text-faded;
+    }
+    > svg {
+        top: calc(($stage-box-active-size/2) - ($stage-box-svg-h/2) - 2px);
+        stroke: base.$color-very-light-bg;
+        fill: base.$color-semi-dark-bg; 
+    }
+}
+
+
+//
+// Styling
+//
+
+
+svg {
+    position: relative;
+    fill: base.$color-dark-bg;
+    z-index: 0;
+}
+
+body {
+    grid-template-rows: 60px 1fr $stage-box-active-size 50px max-content max-content 1fr;
+    grid-template-columns: 1fr minmax(600px, 1600px) 1fr;
+    grid-template-areas: 
+    "h h     h"
+    ". .     ."
+    ". tlBar ."
+    ". cgBar ."
+    ". vBody ."
+    ". gdBox ."
+    ". .     .";
+
+    row-gap: 35px;
+    column-gap: 20px;
+}
+
+#headerBox { 
+    grid-area: h; 
+    background-color: base.$color-dark-bg;    
+    padding-left: 20px; 
+    padding-right: 10px;
+    display: grid;
+    align-content: center;
+    justify-content: left;
+    > p {
+        width: 100%;
+        text-align: left;
+    }
+}
+
+#stageBox { 
+    grid-area: tlBar; 
+    display: grid;
+    grid-template-columns: 1fr repeat(3, 190px) 1fr;
+    grid-template-rows: 1fr;
+    grid-template-areas: ". f s e .";
+}
+
+#stageBox > div {
+    padding: 0;
+    display: grid;
+    border-radius: 5px;
+    position: relative;
+}
+
+#stageBox > div > svg {
+    position: absolute;
+    left: 100%;
+    stroke-width: 2px;
+    width: $stage-box-svg-w;
+    height: $stage-box-svg-h; 
+    z-index: 1;
+}
+
+#stage1Box { grid-area: f; }
+#stage2Box { grid-area: s; }
+#stage3Box { grid-area: e; }
+
+#categorySelectionBox { 
+    grid-area: cgBar; 
+    display: grid;
+    grid-template-columns: 1fr repeat(3, 160px) 1fr;
+    column-gap: 15px;
+    grid-template-rows: 1fr;
+    grid-template-areas: ". f s e .";
+}
+
+.stageFlagDefault {
+    @include stageBoxDefaultStyle();
+    margin: 10px;
+    grid-template-rows: 1fr min-content 1fr 0px;
+    grid-template-areas: "." "t" "." "arrow";
+    > p:nth-child(1) {
+        grid-area: t; 
+        text-align: center; 
+    }
+}
+
+.stageFlagActive {
+    @include stageBoxActiveStyle();
+    margin: 0;
+    grid-template-rows: 1fr min-content 4px min-content 1fr 0px;
+    grid-template-areas: "." "t" "." "c" "." "arrow";
+    > p { text-align: center; }
+    > p:nth-child(1) { grid-area: t; }
+    > p:nth-child(2) { grid-area: c; font-size: 18px; }
+}
+
+#categorySelectionBox > button:nth-child(1) { grid-area: f; overflow: visible; }
+#categorySelectionBox > button:nth-child(2) { grid-area: s; overflow: visible; }
+#categorySelectionBox > button:nth-child(3) { grid-area: e; overflow: visible; }
+
+#votingBox { grid-area: vBody; }
+#infoAndHelpBox { grid-area: gdBox; }
+
+
+#votingBlock2Size {
+    display: grid;
+    grid-template-rows: max-content 50px 25px;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: 
+    "vid1 vid2"
+    "vote1 vote2"
+    "err err";
+
+    row-gap: 20px;
+    column-gap: 20px;
+}
+
+#votingBlock2Size > #embedBox1 { 
+    @include embedArea();
+    grid-area: vid1; 
+    
+}
+
+#votingBlock2Size > #embedBox2 { 
+    @include embedArea();
+    grid-area: vid2; 
+}
+
+#votingBlock2Size > div:nth-child(3) { 
+    @include voteButtonGrid();
+    grid-area: vote1; 
+}
+
+#votingBlock2Size > div:nth-child(4) { 
+    @include voteButtonGrid();
+    grid-area: vote2; 
+}
+
+#votingBlock2Size > div:nth-child(3) > button {
+    grid-area: b;
+}
+
+#votingBlock2Size > div:nth-child(4) > button {
+    grid-area: b;
+}
+
+#votingBlock2Size > div:nth-child(5) { grid-area: err; }
