@@ -5,6 +5,8 @@ The voting website to be used for shounic's upcoming best clip of the year conte
 ## TODO
 
 - [ ] Voting frontend
+   - [ ] Html
+   - [ ] Js
 - [ ] Frontend admin dashboard
 - [x] server/config endpoint
 - [x] server/tables endpoint
