@@ -33,6 +33,7 @@ struct Tally { pub total_votes: i64, pub total_score: i64 }
 #[derive(Serialize, Deserialize)]
 pub struct Config {
     voting_round: i64,
+    voting_stage: i64,
     elimination_threshold: i64,
     videos_per_vote: i64,
     unix_deadline: i64,
@@ -44,7 +45,7 @@ pub struct Config {
 impl Config {
     pub fn new() -> Config {
         toml::from_str(&fs::read_to_string(CONFIG_FILENAME).unwrap_or(".".to_string()))
-            .unwrap_or(Config { voting_round: 1, videos_per_vote: 2, unix_deadline: 0, limit_votes: false, elimination_threshold: 9999, allow_voting: ALLOW_VOTING_BY_DEFAULT })
+            .unwrap_or(Config { voting_round: 1, voting_stage: 1, videos_per_vote: 2, unix_deadline: 0, limit_votes: false, elimination_threshold: 9999, allow_voting: ALLOW_VOTING_BY_DEFAULT })
     }
 
     pub fn save(&self) {
@@ -65,6 +66,10 @@ impl State {
     pub fn current_round(&self) -> i64 {
         self.config.voting_round
     } 
+
+    pub fn current_stage(&self) -> i64 {
+        self.config.voting_stage
+    }
 
 
     pub fn videos_per_vote(&self) -> i64 {
@@ -131,7 +136,14 @@ impl State {
 
     pub fn allow_voting(&mut self, allow_voting: bool) {
         self.config.allow_voting = allow_voting;
+        self.config.save();
     }
+
+
+    pub fn set_voting_stage(&mut self, new_voting_stage: i64) {
+        self.config.voting_stage = new_voting_stage;
+        self.config.save();
+    } 
 
 
     pub fn do_round_progression(&mut self, db: &mut Transaction, new_elimination_threshold: i64) {
@@ -146,6 +158,7 @@ impl State {
         }
 
         self.voter_cache.clear();
+        self.config.save();
     }
 
 
@@ -155,11 +168,6 @@ impl State {
     //        .and_modify(|tally| { tally.total_votes += 1; tally.total_score += score; })
     //        .or_insert(Tally { total_score: score, total_votes: 1});
     //}
-
-
-    pub fn eliminate_videos(&mut self, db: &mut Transaction, threshold: i64) {
-
-    }
 
 
     // Create a new session token

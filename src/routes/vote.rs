@@ -69,7 +69,7 @@ struct IncomingGetResponse { c: i64 }
 
 
 #[derive(Serialize, Debug)]
-struct OutgoingGetResponse { videos: Vec<Video>, c: i64, limit_reached: Vec<bool>, round: i64, current_deadline: i64 }
+struct OutgoingGetResponse { videos: Vec<Video>, c: i64, limit_reached: Vec<bool>, stage: i64, current_deadline: i64 }
 
 
 pub fn handle_get(request: &Request, db: &mut Transaction, user: &User, state: &mut State) -> Response {
@@ -84,7 +84,7 @@ pub fn handle_get(request: &Request, db: &mut Transaction, user: &User, state: &
         videos: vec![], 
         c, 
         limit_reached: limit_reached, 
-        round: state.current_round(), 
+        stage: state.current_stage(), 
         current_deadline: state.current_round_unix_deadline() 
     };
 
