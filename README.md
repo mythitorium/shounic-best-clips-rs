@@ -26,5 +26,7 @@ The voting website to be used for shounic's upcoming best clip of the year conte
 - [x] Clean up unused code
 - [x] More payload validation
 - [x] Add a fake round counter that gets reported to the end user
-- [ ] Add the ability to send submission usernames to the fronend
+- [x] Add the ability to send submission usernames to the frontend
+- [ ] Add vote cooldown
+- [ ] Add login cooldown
 
