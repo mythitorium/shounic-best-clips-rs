@@ -23,4 +23,5 @@ The voting website to be used for shounic's upcoming best clip of the year conte
 - [x] Implement the ability to disable voting
 - [x] Clean up unused code
 - [x] More payload validation
+- [ ] Add a fake round counter that gets reported to the end user
 
