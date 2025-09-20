@@ -39,9 +39,29 @@ button {
   font-size: 20px;
   font-family: Arial;
   box-shadow: none;
-  border: none;
-  background-color: #27333b;
+  border: 2px solid #222d34;
+  background-color: #222d34;
   border-radius: 10px;
+  transition: 0.15s;
+}
+
+button:hover:not([disabled]) {
+  border: 2px solid #e9f1f5;
+}
+
+button:enabled {
+  cursor: pointer;
+}
+
+.selected {
+  border: 2px solid #e9f1f5;
+  background-color: #e9f1f5;
+  color: #222d34;
+}
+
+button:disabled {
+  color: #222d34;
+  background-color: transparent;
 }
 
 /*# sourceMappingURL=base.css.map */

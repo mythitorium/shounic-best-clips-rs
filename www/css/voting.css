@@ -39,14 +39,34 @@ button {
   font-size: 20px;
   font-family: Arial;
   box-shadow: none;
-  border: none;
-  background-color: #27333b;
+  border: 2px solid #222d34;
+  background-color: #222d34;
   border-radius: 10px;
+  transition: 0.15s;
+}
+
+button:hover:not([disabled]) {
+  border: 2px solid #e9f1f5;
+}
+
+button:enabled {
+  cursor: pointer;
+}
+
+.selected {
+  border: 2px solid #e9f1f5;
+  background-color: #e9f1f5;
+  color: #222d34;
+}
+
+button:disabled {
+  color: #222d34;
+  background-color: transparent;
 }
 
 svg {
   position: relative;
-  fill: #27333b;
+  fill: #222d34;
   z-index: 0;
 }
 
@@ -60,7 +80,7 @@ body {
 
 #headerBox {
   grid-area: h;
-  background-color: #27333b;
+  background-color: #222d34;
   padding-left: 20px;
   padding-right: 10px;
   display: grid;
@@ -108,7 +128,7 @@ body {
 
 .stageFlagDefault {
   background-color: rgb(54, 79, 94);
-  border: 2px solid #27333b;
+  border: 2px solid #222d34;
   margin: 10px;
   grid-template-rows: 1fr min-content 1fr 0px;
   grid-template-areas: "." "t" "." "arrow";
@@ -118,7 +138,7 @@ body {
 }
 .stageFlagDefault > svg {
   top: 1px;
-  stroke: #27333b;
+  stroke: #222d34;
   fill: rgb(54, 79, 94);
 }
 .stageFlagDefault > p:nth-child(1) {

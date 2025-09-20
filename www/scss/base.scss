@@ -11,7 +11,7 @@
 $color-bg: #304654;
 $color-light-bg: rgb(54, 79, 94);
 $color-very-light-bg: rgb(96, 127, 146);
-$color-dark-bg: #27333b;
+$color-dark-bg: #222d34;
 $color-semi-dark-bg: #283a46;
 $color-menu-button-hover: #395a6e;
 $color-button-outline: #222d34;
@@ -81,7 +81,29 @@ h2 {
 button {
     @include fontStyle(20px);
     box-shadow: none;
-    border: none;
+    border: 2px solid $color-dark-bg;
+    //border: none;
     background-color: $color-dark-bg;
     border-radius: 10px;
+    transition: 0.15s;
+}
+
+button:hover:not([disabled]) {
+    //background-color: $color-light-bg;
+    border: 2px solid $color-text;
+}
+
+button:enabled {
+    cursor: pointer;
+}
+
+.selected {
+    border: 2px solid $color-text;
+    background-color: $color-text;
+    color: $color-dark-text;
+}
+
+button:disabled {
+    color: $color-dark-text;
+    background-color: transparent;
 }
