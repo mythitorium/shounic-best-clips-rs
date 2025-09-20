@@ -38,14 +38,24 @@ pub struct Config {
     videos_per_vote: i64,
     unix_deadline: i64,
     limit_votes: bool,
-    allow_voting: bool
+    allow_voting: bool,
+    include_usernames: bool,
 }
 
 
 impl Config {
     pub fn new() -> Config {
         toml::from_str(&fs::read_to_string(CONFIG_FILENAME).unwrap_or(".".to_string()))
-            .unwrap_or(Config { voting_round: 1, voting_stage: 1, videos_per_vote: 2, unix_deadline: 0, limit_votes: false, elimination_threshold: 9999, allow_voting: ALLOW_VOTING_BY_DEFAULT })
+            .unwrap_or(Config { 
+                voting_round: 1, 
+                voting_stage: 1, 
+                videos_per_vote: 2,
+                unix_deadline: 0, 
+                limit_votes: false, 
+                elimination_threshold: 9999,
+                allow_voting: ALLOW_VOTING_BY_DEFAULT,
+                include_usernames: false
+            })
     }
 
     pub fn save(&self) {
@@ -98,7 +108,12 @@ impl State {
 
 
     pub fn is_voting_allowed(&self) -> bool {
-        return self.config.allow_voting;
+        self.config.allow_voting
+    }
+
+
+    pub fn do_include_usernames(&self) -> bool {
+        self.config.include_usernames
     }
 
 
@@ -144,6 +159,12 @@ impl State {
         self.config.voting_stage = new_voting_stage;
         self.config.save();
     } 
+
+
+    pub fn set_include_usernames(&mut self, new_include_usernames: bool) {
+        self.config.include_usernames = new_include_usernames;
+        self.config.save();
+    }
 
 
     pub fn do_round_progression(&mut self, db: &mut Transaction, new_elimination_threshold: i64) {

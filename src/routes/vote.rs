@@ -44,14 +44,19 @@ impl<T, E> From<Result<T, E>> for DbResult<T, E> {
 #[derive(Serialize, Debug)]
 struct Video {
     id: i64,
-    youtube_id: String
+    youtube_id: String,
+    u: Option<String>
 }
 
 
 impl Video {
-    pub fn new(id: i64, youtube_id: String) -> Self {
-        Video { id: id, youtube_id: youtube_id }
+    pub fn new(id: i64, youtube_id: String, u: String) -> Self {
+        Video { id: id, youtube_id: youtube_id, u: Some(u) }
     }
+
+    pub fn remove_username(&mut self) {
+        self.u = None;
+    } 
 }
 
 
@@ -88,7 +93,7 @@ pub fn handle_get(request: &Request, db: &mut Transaction, user: &User, state: &
         current_deadline: state.current_round_unix_deadline() 
     };
 
-    match prep_votable_videos(&db, c, user.id, state.videos_per_vote()) {
+    match prep_votable_videos(&db, c, user.id, state.videos_per_vote(), state.do_include_usernames()) {
         DbResult::Ok(videos) => {
             outgoing.videos = videos;
             return Response::json(&outgoing);
@@ -105,7 +110,7 @@ pub fn handle_get(request: &Request, db: &mut Transaction, user: &User, state: &
 
 
 // Picks videos at random that arn't in the banned or disqualified tables. Is tolerant to an inadequate number of videos
-fn prep_votable_videos(db: &Transaction, mut category: i64, uid: i64, amount: i64) -> DbResult<Vec<Video>, Error> {
+fn prep_votable_videos(db: &Transaction, mut category: i64, uid: i64, amount: i64, do_include_usernames: bool) -> DbResult<Vec<Video>, Error> {
     let videos;
     match || -> Result<Vec<Video>, Error> {
         let mut stmt = db.prepare(QUERY_GET_NEW_VOTABLE_VIDEOS)?;
@@ -114,7 +119,10 @@ fn prep_votable_videos(db: &Transaction, mut category: i64, uid: i64, amount: i6
         let mut rows = stmt.query([category.to_string(), amount.to_string()])?;
         let mut vids: Vec<Video> = Vec::new();
         while let Some(row) = rows.next()? {
-            vids.push(Video::new(row.get(0)?, row.get(1)?));
+            // Get username by default, remove it if state says no
+            let mut video = Video::new(row.get(0)?, row.get(1)?, row.get(2)?);
+            if !do_include_usernames { video.remove_username(); }
+            vids.push(video);
         }
         Ok(vids)
     }() {

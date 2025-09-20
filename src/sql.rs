@@ -15,7 +15,7 @@ pub const QUERY_GET_USER_ID: &str = "SELECT id, vote_banned, report_banned FROM 
 // ?1 - category being filtered for
 // ?2 - the amount
 pub const QUERY_GET_NEW_VOTABLE_VIDEOS: &str = "
-    SELECT id, youtube_id FROM videos WHERE is_eliminated = 0 AND is_disqualified = 0 AND category = ?1 ORDER BY random() LIMIT ?2
+    SELECT id, youtube_id, uploader_username FROM videos WHERE is_eliminated = 0 AND is_disqualified = 0 AND category = ?1 ORDER BY random() LIMIT ?2
 ";
 
 // ?1 - user id
