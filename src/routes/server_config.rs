@@ -54,7 +54,8 @@ struct IncomingPostRequest {
     unix_deadline: Option<i64>,
     limit_votes: Option<bool>,
     elimination_threshold: Option<i64>,
-    allow_voting: Option<bool>
+    allow_voting: Option<bool>,
+    include_usernames: Option<bool>
 }
 
 
@@ -66,7 +67,8 @@ pub fn handle_post(request: &Request, db: &mut Transaction, _user: &User, state:
         unix_deadline, 
         limit_votes,
         elimination_threshold,
-        allow_voting
+        allow_voting,
+        include_usernames
     } = try_or_400!(rouille::input::json_input(request));
 
     if !state.validate_token(&token) { return Response::message_json("bad credentials").with_status_code(401); }
@@ -77,6 +79,7 @@ pub fn handle_post(request: &Request, db: &mut Transaction, _user: &User, state:
     if let Some(new_limit_votes) = limit_votes                           { state.set_limit_votes(new_limit_votes); }
     if let Some(new_allow_voting) = allow_voting                         { state.allow_voting(new_allow_voting); }
     if let Some(new_elimination_threshold) = elimination_threshold        { state.do_round_progression(db, new_elimination_threshold); }
+    if let Some(new_include_usernames) = include_usernames               { state.set_include_usernames(new_include_usernames); }
 
     Response::message_json("Server state updated").with_status_code(200)
 }
