@@ -4,7 +4,7 @@
 //
 //
 
-function sc_fetch(endpoint, payload, method) {
+function shoClipsFetch(endpoint, payload, method) {
     window.fetch(endpoint, {
         method: method,
         headers: {
@@ -14,4 +14,9 @@ function sc_fetch(endpoint, payload, method) {
     }).then((response) => {
         return [response.status, response.json()];
     });
+}
+
+
+function getById(id) {
+    return document.getElementById(id);
 }

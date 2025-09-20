@@ -79,14 +79,12 @@ body {
   grid-template-rows: 1fr;
   grid-template-areas: ". f s e .";
 }
-
 #stageBox > div {
   padding: 0;
   display: grid;
   border-radius: 5px;
   position: relative;
 }
-
 #stageBox > div > svg {
   position: absolute;
   left: 100%;
@@ -106,15 +104,6 @@ body {
 
 #stage3Box {
   grid-area: e;
-}
-
-#categorySelectionBox {
-  grid-area: cgBar;
-  display: grid;
-  grid-template-columns: 1fr repeat(3, 160px) 1fr;
-  column-gap: 15px;
-  grid-template-rows: 1fr;
-  grid-template-areas: ". f s e .";
 }
 
 .stageFlagDefault {
@@ -163,6 +152,15 @@ body {
   font-size: 18px;
 }
 
+#categorySelectionBox {
+  grid-area: cgBar;
+  display: grid;
+  grid-template-columns: 1fr repeat(3, 160px) 1fr;
+  column-gap: 15px;
+  grid-template-rows: 1fr;
+  grid-template-areas: ". f s e .";
+}
+
 #categorySelectionBox > button:nth-child(1) {
   grid-area: f;
   overflow: visible;
@@ -182,10 +180,6 @@ body {
   grid-area: vBody;
 }
 
-#infoAndHelpBox {
-  grid-area: gdBox;
-}
-
 #votingBlock2Size {
   display: grid;
   grid-template-rows: max-content 50px 25px;
@@ -194,7 +188,6 @@ body {
   row-gap: 20px;
   column-gap: 20px;
 }
-
 #votingBlock2Size > #embedBox1 {
   display: grid;
   justify-content: center;
@@ -205,7 +198,6 @@ body {
   overflow: hidden;
   grid-area: vid1;
 }
-
 #votingBlock2Size > #embedBox2 {
   display: grid;
   justify-content: center;
@@ -216,7 +208,6 @@ body {
   overflow: hidden;
   grid-area: vid2;
 }
-
 #votingBlock2Size > div:nth-child(3) {
   display: grid;
   grid-template-columns: 1fr 200px 1fr;
@@ -224,7 +215,6 @@ body {
   grid-template-areas: ". b .";
   grid-area: vote1;
 }
-
 #votingBlock2Size > div:nth-child(4) {
   display: grid;
   grid-template-columns: 1fr 200px 1fr;
@@ -232,17 +222,36 @@ body {
   grid-template-areas: ". b .";
   grid-area: vote2;
 }
-
 #votingBlock2Size > div:nth-child(3) > button {
   grid-area: b;
 }
-
 #votingBlock2Size > div:nth-child(4) > button {
   grid-area: b;
 }
-
 #votingBlock2Size > div:nth-child(5) {
   grid-area: err;
+}
+
+#infoAndHelpBox {
+  grid-area: gdBox;
+  display: grid;
+  grid-template-columns: 1fr minmax(0px, 700px) 1fr;
+  grid-template-areas: ". c .";
+  column-gap: 35px;
+}
+#infoAndHelpBox > div {
+  grid-area: c;
+}
+#infoAndHelpBox > div > p:nth-child(odd) {
+  color: rgba(233, 241, 245, 0.6509803922);
+  margin-bottom: 25px;
+}
+#infoAndHelpBox > div > p:nth-child(1) {
+  color: #e9f1f5;
+}
+
+.hidden {
+  display: none;
 }
 
 /*# sourceMappingURL=voting.css.map */

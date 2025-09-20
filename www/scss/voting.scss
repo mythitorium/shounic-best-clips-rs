@@ -88,6 +88,8 @@ body {
     column-gap: 20px;
 }
 
+// SITE HEADER
+
 #headerBox { 
     grid-area: h; 
     background-color: base.$color-dark-bg;    
@@ -102,42 +104,33 @@ body {
     }
 }
 
+// STAGE / CONTEST TIMELINE BAR 
+
 #stageBox { 
     grid-area: tlBar; 
     display: grid;
     grid-template-columns: 1fr repeat(3, 190px) 1fr;
     grid-template-rows: 1fr;
     grid-template-areas: ". f s e .";
-}
-
-#stageBox > div {
-    padding: 0;
-    display: grid;
-    border-radius: 5px;
-    position: relative;
-}
-
-#stageBox > div > svg {
-    position: absolute;
-    left: 100%;
-    stroke-width: 2px;
-    width: $stage-box-svg-w;
-    height: $stage-box-svg-h; 
-    z-index: 1;
+    > div {
+        padding: 0;
+        display: grid;
+        border-radius: 5px;
+        position: relative;
+        > svg {
+            position: absolute;
+            left: 100%;
+            stroke-width: 2px;
+            width: $stage-box-svg-w;
+            height: $stage-box-svg-h; 
+            z-index: 1;
+        }
+    }
 }
 
 #stage1Box { grid-area: f; }
 #stage2Box { grid-area: s; }
 #stage3Box { grid-area: e; }
-
-#categorySelectionBox { 
-    grid-area: cgBar; 
-    display: grid;
-    grid-template-columns: 1fr repeat(3, 160px) 1fr;
-    column-gap: 15px;
-    grid-template-rows: 1fr;
-    grid-template-areas: ". f s e .";
-}
 
 .stageFlagDefault {
     @include stageBoxDefaultStyle();
@@ -160,13 +153,24 @@ body {
     > p:nth-child(2) { grid-area: c; font-size: 18px; }
 }
 
+// CATEGORY BUTTON BAR
+
+#categorySelectionBox { 
+    grid-area: cgBar; 
+    display: grid;
+    grid-template-columns: 1fr repeat(3, 160px) 1fr;
+    column-gap: 15px;
+    grid-template-rows: 1fr;
+    grid-template-areas: ". f s e .";
+}
+
 #categorySelectionBox > button:nth-child(1) { grid-area: f; overflow: visible; }
 #categorySelectionBox > button:nth-child(2) { grid-area: s; overflow: visible; }
 #categorySelectionBox > button:nth-child(3) { grid-area: e; overflow: visible; }
 
-#votingBox { grid-area: vBody; }
-#infoAndHelpBox { grid-area: gdBox; }
+// VIDEO EMBED BOX
 
+#votingBox { grid-area: vBody; }
 
 #votingBlock2Size {
     display: grid;
@@ -179,35 +183,36 @@ body {
 
     row-gap: 20px;
     column-gap: 20px;
+
+    > #embedBox1 { @include embedArea(); grid-area: vid1; }
+    > #embedBox2 { @include embedArea(); grid-area: vid2; }
+    > div:nth-child(3) { @include voteButtonGrid(); grid-area: vote1; }
+    > div:nth-child(4) { @include voteButtonGrid(); grid-area: vote2; }
+    > div:nth-child(3) > button { grid-area: b; }
+    > div:nth-child(4) > button { grid-area: b; }
+    > div:nth-child(5) { grid-area: err; }
 }
 
-#votingBlock2Size > #embedBox1 { 
-    @include embedArea();
-    grid-area: vid1; 
-    
+// FAQ BOX
+
+#infoAndHelpBox {
+    grid-area: gdBox;
+    display: grid;
+    grid-template-columns: 1fr minmax(0px, 700px) 1fr;
+    grid-template-areas: ". c .";
+    column-gap: 35px;
+    > div {
+        grid-area: c;
+        > p:nth-child(odd) {
+            color: base.$color-text-faded;
+            margin-bottom: 25px;
+        }
+        > p:nth-child(1) {
+            color: base.$color-text;
+        }
+    }
 }
 
-#votingBlock2Size > #embedBox2 { 
-    @include embedArea();
-    grid-area: vid2; 
-}
+// OTHER
 
-#votingBlock2Size > div:nth-child(3) { 
-    @include voteButtonGrid();
-    grid-area: vote1; 
-}
-
-#votingBlock2Size > div:nth-child(4) { 
-    @include voteButtonGrid();
-    grid-area: vote2; 
-}
-
-#votingBlock2Size > div:nth-child(3) > button {
-    grid-area: b;
-}
-
-#votingBlock2Size > div:nth-child(4) > button {
-    grid-area: b;
-}
-
-#votingBlock2Size > div:nth-child(5) { grid-area: err; }
+.hidden { display: none; }
