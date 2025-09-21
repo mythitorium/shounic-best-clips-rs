@@ -174,34 +174,43 @@ pub fn handle_post(request: &Request, db: &mut Transaction, user: &User, state: 
     if !state.is_voting_allowed() { Response::message_json("Voting isn't allowed at this time").with_status_code(423); }
     
     // Validate vote by comparing it against the user's active votes
-    match || -> Result<Vec<(i64, i64)>, Error> {
+    match || -> Result<Vec<(i64, i64, i64)>, Error> {
         let mut stmt = db.prepare(QUERY_GET_ACTIVE_VOTE_VIDEOS)?;
         let mut rows = stmt.query([user.id])?;
-        let mut active_list: Vec<(i64, i64)> = Vec::new();
+        let mut active_list: Vec<(i64, i64, i64)> = Vec::new();
         while let Some(row) = rows.next()? {
-            active_list.push((row.get(0)?, row.get(1)?));
+            active_list.push((row.get(0)?, row.get(1)?, row.get(1)?));
         }
         Ok(active_list)
     }() {
         Ok(active_list) => {
-            //Validation
+            // User voted too fast
+            let time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
+            if time < active_list[0].2 as u128 {
+                return Response::message_json("You're voting too fast! Slow down!").with_status_code(429);
+            }
+
+            // Someone tried to vote before receiving any videos to vote on
             if active_list.len() == 0 {
                 println!("Invalid vote attempt: User has no active votes, but attempted to submit something anyway: {:?}", incoming_list);
                 return Response::message_json("Vote submitted").with_status_code(200);
             }
 
-            for (id, _) in &active_list {
+            // Video ids user submitted do not match the contents found in active votes
+            for (id, _, _) in &active_list {
                 if !incoming_list.contains(id) {
                     println!("Invalid vote attempt: Vote does not match user's active vote: Submitted: {:?}, expected {:?}", incoming_list, active_list);
                     return Response::message_json("Vote submitted").with_status_code(200);
                 }
             }
 
+            // User attempted to vote with too many or not enough videos
             if incoming_list.len() != active_list.len() {
                 println!("Invalid vote attempt: Length does not match user's active_vote: Submitted: {}, expected: {}", incoming_list.len(), active_list.len());
                 return Response::message_json("Vote submitted").with_status_code(200);
             }
 
+            // User is banned
             if user.vote_banned {
                 println!("Invalid vote attempt: This user has been shadow banned");
                 return Response::message_json("Vote submitted").with_status_code(200);

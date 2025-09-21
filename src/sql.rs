@@ -36,7 +36,7 @@ pub const QUERY_SET_ACTIVE_VOTE: &str = "INSERT INTO active_votes(user_id, video
 pub const QUERY_CLEAR_ACTIVE_VOTES: &str = "DELETE FROM active_votes WHERE user_id = ?1";
 
 // ?1 - user id
-pub const QUERY_GET_ACTIVE_VOTE_VIDEOS: &str = "SELECT id, category FROM videos JOIN active_votes ON active_votes.video_id = videos.id WHERE active_votes.user_id = ?1;";
+pub const QUERY_GET_ACTIVE_VOTE_VIDEOS: &str = "SELECT id, category, start_time FROM videos JOIN active_votes ON active_votes.video_id = videos.id WHERE active_votes.user_id = ?1;";
 
 pub const QUERY_GET_VOTES_THIS_ROUND: &str = "SELECT user_id, videos.category FROM votes JOIN videos ON videos.id = votes.video_id WHERE round = ?1 GROUP BY user_id";
 
