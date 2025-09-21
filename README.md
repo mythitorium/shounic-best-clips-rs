@@ -28,5 +28,5 @@ The voting website to be used for shounic's upcoming best clip of the year conte
 - [x] Add a fake round counter that gets reported to the end user
 - [x] Add the ability to send submission usernames to the frontend
 - [x] Add vote cooldown
-- [ ] Add login cooldown
+- [x] Add login cooldown
 

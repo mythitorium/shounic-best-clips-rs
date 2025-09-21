@@ -39,6 +39,10 @@ struct OutgoingGetResponse {
 
 pub fn handle_get(request: &Request, db: &mut Transaction, _user: &User, state: &mut State) -> Response {
         let IncomingGetRequest { username, password } = try_or_400!(rouille::input::json_input(request));
+
+        if !state.has_login_validity(&username) {
+            return Response::message_json("Login timeout").with_status_code(429);
+        }
         
         match || -> Result<String, Error> {
             db.query_row(QUERY_GET_USER_HASH, [username], |row| 

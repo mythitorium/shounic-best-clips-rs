@@ -8,7 +8,7 @@ use std::{collections::HashMap, fs::{self, File}, hash::Hash, time::{SystemTime,
 use jwt_simple::{prelude::*, Error};
 use rusqlite::Transaction;
 
-use crate::sql::*;
+use crate::{routes::login, sql::*};
 
 // This is the server state. It stores configuration and handles any caching that's best done outside a database
 //
@@ -24,10 +24,11 @@ pub struct State {
     // These values are not
     voter_cache: HashMap<i64, Vec<bool>>,
     jwt_key_pair: ES256KeyPair,
+    login_attempt_cache: HashMap<String, LoginTracker>
 }
 
 
-struct Tally { pub total_votes: i64, pub total_score: i64 }
+struct LoginTracker { attempts: i64, lockout: u64 }
 
 
 #[derive(Serialize, Deserialize)]
@@ -69,13 +70,16 @@ impl State {
         State { 
             config: Config::new(),
             voter_cache: HashMap::new(),
-            jwt_key_pair: ES256KeyPair::generate()
+            jwt_key_pair: ES256KeyPair::generate(),
+            login_attempt_cache: HashMap::new()
         }
     }
     
+
     pub fn current_round(&self) -> i64 {
         self.config.voting_round
     } 
+
 
     pub fn current_stage(&self) -> i64 {
         self.config.voting_stage
@@ -183,14 +187,6 @@ impl State {
     }
 
 
-    //pub fn tally_vote(&mut self, id: i64, score: i64) {
-    //    self.tally_cache
-    //        .entry(id)
-    //        .and_modify(|tally| { tally.total_votes += 1; tally.total_score += score; })
-    //        .or_insert(Tally { total_score: score, total_votes: 1});
-    //}
-
-
     // Create a new session token
     pub fn generate_new_token(&mut self) -> Result<String, Error> {
         let claims = Claims::create(Duration::from_secs(30));
@@ -207,6 +203,31 @@ impl State {
             return false;
         }
     }
+
+
+    // Check to see if user has attempted to login too much & log said login attempt
+    // Basically a check against random users attempting to abuse the login system
+    pub fn has_login_validity(&mut self, username: &String) -> bool {
+        let mut can: bool = false;
+
+        self.login_attempt_cache
+            .entry(username.clone())
+            .and_modify(|login_tracker| {
+                let now_secs = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+
+                if login_tracker.attempts < 5 || login_tracker.lockout <= now_secs {
+                    can = true;
+                    login_tracker.attempts += 1;
+                    login_tracker.lockout = now_secs + 180;
+                } else {
+                    can = false;
+                }
+            })
+            .or_insert(LoginTracker { attempts: 1, lockout: 0 });
+    
+        can
+    }
+
 
     pub fn config(&self) -> &Config {
         return &self.config;
