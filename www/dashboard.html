@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <base href=".">
+    <meta charset="UTF-8">
+    <meta http-Equiv="Cache-Control" Content="no-cache" />
+    <meta http-Equiv="Pragma" Content="no-cache" />
+    <meta http-Equiv="Expires" Content="0" />
+    
+    <title>Dashboard</title>
+    <link rel="icon" href="icon.webp">
+
+    <link rel="stylesheet" href="css/dashboard.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script defer src="js/dashboard.js"></script>
+
+    <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+</head>
+<body>
+    <div id="dashboard">
+        <div>
+            <div id="configTab" onclick="tabClicked('config')">
+                <p>Server Config</p>
+            </div>
+            <div id="dashboardTab" onclick="tabClicked('dash')">
+                <p>Dashboard</p>
+            </div>
+        </div>
+        <div>
+            <p id="errFieldP"></p>
+        </div>
+        <div>
+            <div id="configRegion" class="hidden">
+                <form>
+                    <label for="allow_voting">Allow Voting:</label>
+                    <input type="checkbox" id="allow_voting" name="allow_voting" onchange="inputChanged('allow_voting')">
+                    <label id="allow_votingMarker" class="modifiedMarkerLabel"></label>
+                    <br>
+                    <p>
+                        General website lock.
+                    </p>
+                    <br>
+                    <label for="unix_deadline">Unix Deadline:</label>
+                    <input min="0" type="number" id="unix_deadline" name="unix_deadline" onchange="inputChanged('unix_deadline')">
+                    <label id="unix_deadlineMarker" class="modifiedMarkerLabel"></label>
+                    <br>
+                    <p>
+                        What the displayed countdown listed underneath the current stage is counting down to. 
+                        <br>
+                        Unix in seconds. Reaching zero has no effect.
+                    </p>
+                        <br>
+                    <label for="voting_stage">Voting Stage:</label>
+                    <input min="1" max="3" type="number" id="voting_stage" name="voting_stage" onchange="inputChanged('voting_stage')">
+                    <label id="voting_stageMarker" class="modifiedMarkerLabel"></label>
+                    <br>
+                    <p>
+                        What "stage" of voting the contest is on. Purely visual, dictates what 'stage' is highlighted to the user. 
+                        <br>
+                        Do not set to a value greater than 3. Can be decreased without issue
+                    </p>
+                    <br>
+                    <label for="limit_votes">Limit Votes:</label>
+                    <input type="checkbox" id="limit_votes" name="limit_votes" onchange="inputChanged('limit_votes')">
+                    <label id="limit_votesMarker" class="modifiedMarkerLabel"></label>
+                    <br>
+                    <p>
+                        If false, a user can vote an infinite number of times. If true, the user can only vote once <b>this round</b>. 
+                    </p>
+                    <br>
+                    <label for="videos_per_vote">Videos Per Vote:</label>
+                    <input min="2" max="5" type="number" id="videos_per_vote" name="videos_per_vote" onchange="inputChanged('videos_per_vote')">
+                    <label id="videos_per_voteMarker" class="modifiedMarkerLabel"></label>
+                    <br>
+                    <p>
+                        The number of videos a user will receive and vote on at once. 
+                        <br>The front end uses this value to determine if the user votes on between 2 videos or is asked to rank 5.
+                        <br>Do not set to a value that isn't 2 or 5.
+                    </p>
+                    <br>
+                    <label for="elimination_threshold">Elimination Threshold:</label>
+                    <input min="2" max="9999" type="number" id="elimination_threshold" name="elimination_threshold" onchange="inputChanged('elimination_threshold')">
+                    <label id="elimination_thresholdMarker" class="modifiedMarkerLabel"></label>
+                    <br>
+                    <p>
+                        How many videos should be included in this round of voting. Category independent.
+                        <br>
+                        Reducing this value will cause two things:
+                    </p>
+                    <ul>
+                        <li>
+                            Server will move to a 'new round.' This is different from the Voting Stage, and is only used internally. 
+                            <br>Rounds compartmentalize votes. Votes from a previous round will not effect the current round.
+                        </li>
+                        <li>
+                            Videos from the current round are ordered by highest score and every submission below the threshold is eliminated, 
+                            <br>and will not be served to users anymore.
+                        </li>
+                    </ul>
+                    <p>
+                        Highly sensitive value. Do not change on a whim. Do not change rapidly. 
+                        <br>
+                        <b>Changes cannot be reverted</b>, server will actively refuse if a new value is greater than an old one. 
+                        <br>
+                        If changing, change in combination with other config parameters in one request.
+                    </p>
+                    <br>
+                    <label for="include_usernames">Include Usernames:</label>
+                    <input type="checkbox" id="include_usernames" name="include_usernames" onchange="inputChanged('include_usernames')">
+                    <label id="include_usernamesMarker" class="modifiedMarkerLabel"></label>
+                    <br>
+                    <p>
+                        Whether usernames are included alongside youtube urls when a user requests to vote. 
+                        <br>
+                        Used for the ranked voting stage. Can be toggled without issue. Uses usernames contestants submitted.
+                    </p>
+                    <br>
+                    <input id="postConfigButton" type="button" value="Save Changes" onclick="postConfigChanges()"> 
+                    <input id="discardConfigChangesButton" type="button" value="Discard Changes" onclick="revertConfigChanges()">
+                    <p>
+                        Do not mess with shit on a whim, you will break something and ruin either in integrity of the vote or break the website.
+                        <br>
+                        The backend does minimal checks when receiving these values. <b>Do not fuck up.</b> 
+                    </p>
+                </form>
+            </div>
+            <div id="dashboardRegion" class="hidden">
+            </div>
+        </div>
+    </div>
+    <div id="login" class="hidden">
+        <p>pckXklzik5ri</p>
+        <form>
+            <label for="login_username">Username:</label>
+            <input type="text" id="loginUsername" name="login_username">
+            <br>
+            <label for="login_password">Password:</label>
+            <input type="password" id="loginPassword" name="login_password">
+            <br>
+            <input type="button" id="loginSubmit" name="login_submit" onclick="login()" value="Login"></input>
+            <br><br>
+            <p id="errFieldPLogin"></p>
+        </form>
+    </div>
+    <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
+</body>
+</html>

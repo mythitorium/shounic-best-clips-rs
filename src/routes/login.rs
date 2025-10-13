@@ -25,7 +25,7 @@ use crate::{routes::*, *};
 
 
 #[derive(Deserialize, Debug)]
-struct IncomingGetRequest { 
+struct IncomingPostRequest { 
     username: String, 
     password: String 
 }
@@ -37,11 +37,11 @@ struct OutgoingGetResponse {
 }
 
 
-pub fn handle_get(request: &Request, db: &mut Transaction, _user: &User, state: &mut State) -> Response {
-        let IncomingGetRequest { username, password } = try_or_400!(rouille::input::json_input(request));
+pub fn handle_post(request: &Request, db: &mut Transaction, _user: &User, state: &mut State) -> Response {
+        let IncomingPostRequest { username, password } = try_or_400!(rouille::input::json_input(request));
 
         if !state.has_login_validity(&username) {
-            return Response::message_json("Login timeout").with_status_code(429);
+            return Response::message_json("Login rate limit").with_status_code(429);
         }
         
         match || -> Result<String, Error> {

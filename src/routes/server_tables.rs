@@ -11,6 +11,7 @@ use rouille::{try_or_400, Request};
 use rusqlite::{Rows, Transaction, Error};
 use rouille::Response;
 use crate::{routes::*, *};
+use serde_qs;
 
 
 //
@@ -61,7 +62,7 @@ const ROWS_PER_PAGE: i64 = 200;
 
 
 pub fn handle_get(request: &Request, db: &mut Transaction, _user: &User, state: &mut State) -> Response {
-    let IncomingGetRequest { token, page, table, round, category } = try_or_400!(rouille::input::json_input(request));
+    let IncomingGetRequest { token, page, table, round, category } = try_or_400!(serde_qs::from_str::<IncomingGetRequest>(request.raw_query_string()));
 
     if !state.validate_token(&token) { return Response::message_json("bad credentials").with_status_code(401); }
     if round < 1 || category < 1 || category > NUMBER_OF_CATEGORIES || page < 1 { return Response::message_json("bad payload").with_status_code(400); } 

@@ -11,3 +11,4 @@ _main.rs
 *.db-*
 *.lock
 *.map
+server_config.toml

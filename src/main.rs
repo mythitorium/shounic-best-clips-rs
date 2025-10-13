@@ -108,12 +108,12 @@ fn main() {
                 response = router!(request,
                     // Html
                     (GET)  (/) =>            { Response::from_file("text/html", File::open("www/index.html").unwrap()) },
-                    (GET)  (/admin) =>       { Response::from_file("text/html", File::open("www/admin.html").unwrap()) }, 
+                    (GET)  (/dashboard) =>       { Response::from_file("text/html", File::open("www/dashboard.html").unwrap()) }, 
 
                     // Json payload
                     (GET)  (/vote) =>           { routes::vote::handle_get           (request, &mut db, &user, &mut state) }, 
                     (POST) (/vote) =>           { routes::vote::handle_post          (request, &mut db, &user, &mut state) }, 
-                    (GET)  (/admin/login) =>    { routes::login::handle_get          (request, &mut db, &user, &mut state) }, 
+                    (POST) (/admin/login) =>    { routes::login::handle_post          (request, &mut db, &user, &mut state) }, 
                     (GET)  (/server/config) =>  { routes::server_config::handle_get  (request, &mut db, &user, &mut state) }, 
                     (POST) (/server/config) =>  { routes::server_config::handle_post (request, &mut db, &user, &mut state) }, 
                     (GET)  (/server/tables) =>  { routes::server_tables::handle_get  (request, &mut db, &user, &mut state) }, 

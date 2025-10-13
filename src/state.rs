@@ -17,6 +17,8 @@ use crate::{routes::login, sql::*};
 pub const NUMBER_OF_CATEGORIES: i64 = 2;
 const CONFIG_FILENAME: &str = "server_config.toml";
 const ALLOW_VOTING_BY_DEFAULT: bool = true;
+const LOGIN_LOCKOUT_TIME_SECS: u64 = 180;
+const CLAIMS_LIFETIME_MINS: u64 = 30;
 
 pub struct State {
     config: Config,
@@ -189,7 +191,7 @@ impl State {
 
     // Create a new session token
     pub fn generate_new_token(&mut self) -> Result<String, Error> {
-        let claims = Claims::create(Duration::from_secs(30));
+        let claims = Claims::create(Duration::from_mins(CLAIMS_LIFETIME_MINS));
         let token = self.jwt_key_pair.sign(claims)?;
         Ok(token)
     }
@@ -208,7 +210,7 @@ impl State {
     // Check to see if user has attempted to login too much & log said login attempt
     // Basically a check against random users attempting to abuse the login system
     pub fn has_login_validity(&mut self, username: &String) -> bool {
-        let mut can: bool = false;
+        let mut can: bool = true;
 
         self.login_attempt_cache
             .entry(username.clone())
@@ -216,14 +218,20 @@ impl State {
                 let now_secs = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
 
                 if login_tracker.attempts < 5 || login_tracker.lockout <= now_secs {
+                    // reset if lockout expires
+                    if login_tracker.attempts >= 5 {
+                        login_tracker.attempts = 0;
+                    }
                     can = true;
                     login_tracker.attempts += 1;
-                    login_tracker.lockout = now_secs + 180;
+                    login_tracker.lockout = now_secs + LOGIN_LOCKOUT_TIME_SECS;
                 } else {
                     can = false;
                 }
+
+                //println!("Failed login attempt [attempts: {}, lockout: {}, can: {can}]", login_tracker.attempts,  login_tracker.lockout - now_secs);
             })
-            .or_insert(LoginTracker { attempts: 1, lockout: 0 });
+            .or_insert(LoginTracker { attempts: 1, lockout: 0 } );
     
         can
     }

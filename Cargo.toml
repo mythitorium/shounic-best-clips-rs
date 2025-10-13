@@ -14,3 +14,4 @@ argon2 = "0.5.3"
 jwt-simple = "0.12.12"
 reqwest = { version = "0.11", features = ["blocking"] }
 toml = "0.9.5"
+serde_qs = "0.15.0"

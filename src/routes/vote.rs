@@ -13,6 +13,7 @@ use rusqlite::{fallible_streaming_iterator::FallibleStreamingIterator, Error, Tr
 use rouille::Response;
 use serde::{Deserialize, Serialize};
 use crate::{routes::*, *};
+use serde_qs;
 
 
 //
@@ -70,30 +71,41 @@ impl Video {
 
 
 #[derive(Deserialize)]
-struct IncomingGetResponse { c: i64 }
+struct IncomingGetRequest { c: i64 }
 
 
 #[derive(Serialize, Debug)]
-struct OutgoingGetResponse { videos: Vec<Video>, c: i64, limit_reached: Vec<bool>, stage: i64, current_deadline: i64 }
+struct OutgoingGetResponse { videos: Vec<Video>, c: i64, limit_active: bool, stage: i64, current_deadline: i64 }
 
 
 pub fn handle_get(request: &Request, db: &mut Transaction, user: &User, state: &mut State) -> Response {
-    let IncomingGetResponse { c } = try_or_400!(rouille::input::json_input(request));
+    let IncomingGetRequest { c } = try_or_400!(serde_qs::from_str::<IncomingGetRequest>(request.raw_query_string()));
 
-    if !state.is_voting_allowed() { Response::message_json("Voting isn't allowed at this time").with_status_code(423); }
-    if c < 0 || c > NUMBER_OF_CATEGORIES { Response::message_json("bad payload").with_status_code(400); }
+    if !state.is_voting_allowed() { return Response::message_json("locked").with_status_code(423); }
 
-    let mut limit_reached = state.get_voter_record(user.id);
+    if c < 0 || c > NUMBER_OF_CATEGORIES { return Response::message_json("bad payload").with_status_code(400); }
 
     let mut outgoing = OutgoingGetResponse { 
         videos: vec![], 
         c, 
-        limit_reached: limit_reached, 
+        limit_active: state.limit_votes(),
         stage: state.current_stage(), 
         current_deadline: state.current_round_unix_deadline() 
     };
 
-    match prep_votable_videos(&db, c, user.id, state.videos_per_vote(), state.do_include_usernames()) {
+    // don't even bother fetching videos if limit reached
+    if || -> bool {
+        for limit in state.get_voter_record(user.id) { if !limit { return false; } }
+        true
+    }() {
+        return Response::json(&outgoing);
+    }
+
+    let mut real_category = c;
+    if c == 0 { real_category = (SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() % (NUMBER_OF_CATEGORIES as u128)) as i64 + 1; }
+    outgoing.c = real_category;
+
+    match prep_votable_videos(&db, real_category, user.id, state.videos_per_vote(), state.do_include_usernames()) {
         DbResult::Ok(videos) => {
             outgoing.videos = videos;
             return Response::json(&outgoing);
@@ -115,7 +127,6 @@ fn prep_votable_videos(db: &Transaction, mut category: i64, uid: i64, amount: i6
     match || -> Result<Vec<Video>, Error> {
         let mut stmt = db.prepare(QUERY_GET_NEW_VOTABLE_VIDEOS)?;
         // If the category is 0, which signifies "any," modulate unix timestamp to pseudo-randomly choose a category 
-        if category == 0 { category = (SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() % (NUMBER_OF_CATEGORIES as u128)) as i64 + 1; }
         let mut rows = stmt.query([category.to_string(), amount.to_string()])?;
         let mut vids: Vec<Video> = Vec::new();
         while let Some(row) = rows.next()? {
@@ -211,12 +222,12 @@ pub fn handle_post(request: &Request, db: &mut Transaction, user: &User, state: 
             }
 
             // User is banned
-            if user.vote_banned {
-                println!("Invalid vote attempt: This user has been shadow banned");
-                return Response::message_json("Vote submitted").with_status_code(200);
-            }
-            
-            let vote_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as i64;
+            // Update: User votes are now saved to the database but arn't counted in totals, 
+            // this is so they'll show up in the voter records so they'll hit the vote limit not knowing their vote doesn't count  
+            //if user.vote_banned {
+            //    println!("Invalid vote attempt: This user has been shadow banned");
+            //    return Response::message_json("Vote submitted").with_status_code(200);
+            //}
             
             if let Err(_) = || -> Result<(), Error> {
                 db.execute(QUERY_CLEAR_ACTIVE_VOTES, [user.id])?;
@@ -234,7 +245,7 @@ pub fn handle_post(request: &Request, db: &mut Transaction, user: &User, state: 
                         opponent = incoming_list[0];
                     }
                     let score = incoming_list.len() as i64 - 1 - index;
-                    db.execute(QUERY_VOTE, [user.id, target, score, opponent, state.current_round(), vote_time])?;
+                    db.execute(QUERY_VOTE, [user.id, target, score, opponent, state.current_round(), time as i64])?;
                     
                     index += 1;
                 }

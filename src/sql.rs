@@ -54,9 +54,15 @@ pub const QUERY_ELIMINATE_VIDEOS: &str = "
         SELECT video_id 
         FROM votes 
 		JOIN videos ON videos.id = votes.video_id
-        WHERE round = ?2 AND videos.category = ?3 AND opponent_video_id NOT IN (
-            SELECT id FROM videos WHERE is_disqualified = 1
-        )
+        WHERE 
+            round = ?2 
+            AND videos.category = ?3 
+            AND opponent_video_id NOT IN (
+                SELECT id FROM videos WHERE is_disqualified = 1
+            )
+            AND votes.user_id NOT IN (
+                SELECT id FROM users WHERE vote_banned = 0
+            )
         GROUP BY video_id
         ORDER BY AVG(score) DESC
 		LIMIT ?4
@@ -78,7 +84,15 @@ pub const QUERY_FRONTEND_GET_RANKING_DATA: &str = "
         COUNT(score) as total_votes 
     FROM votes
     JOIN videos ON videos.id = votes.video_id
-    WHERE round = ?1 AND category = ?2
+    WHERE 
+        votes.round = ?1 
+        AND votes.category = ?2
+        AND votes.opponent_video_id NOT IN (
+            SELECT id FROM videos WHERE is_disqualified = 1
+        )
+        AND votes.user_id NOT IN (
+            SELECT id FROM users WHERE vote_banned = 0
+        )
     GROUP BY video_id
     ORDER BY avg_score DESC
     LIMIT ?3 OFFSET ?4

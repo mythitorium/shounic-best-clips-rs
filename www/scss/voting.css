@@ -100,7 +100,8 @@ body {
   grid-template-rows: 75px 35px 60px 35px min-content 10px 50px 15px min-content 35px max-content 30px 25px 15px max-content min-content;
   grid-template-columns: 1fr minmax(600px, 1900px) 1fr;
   grid-template-areas: "h h     h" ". .     ." ". stageBox ." ". .     ." ". categoryHeaderBox ." ". .     ." ". categorySelectionBox ." ". .     ." ". categoryInfoBox ." ". .     ." ". votingBox ." ". .     ." ". errBox ." ". .     ." ". infoAndHelpBox ." ". mainErrorPane .";
-  column-gap: 20px;
+  -moz-column-gap: 20px;
+       column-gap: 20px;
 }
 
 #headerBox {
@@ -228,7 +229,8 @@ body {
   grid-area: categorySelectionBox;
   display: grid;
   grid-template-columns: 1fr repeat(3, 160px) 1fr;
-  column-gap: 15px;
+  -moz-column-gap: 15px;
+       column-gap: 15px;
   grid-template-rows: 1fr;
   grid-template-areas: ". f s e .";
 }
@@ -263,7 +265,6 @@ body {
 
 #votingBox {
   grid-area: votingBox;
-  position: relative;
 }
 
 #votingBlock2Size {
@@ -272,7 +273,8 @@ body {
   grid-template-columns: 1fr 1fr;
   grid-template-areas: "vid1 vid2" "vote1 vote2";
   row-gap: 20px;
-  column-gap: 20px;
+  -moz-column-gap: 20px;
+       column-gap: 20px;
 }
 #votingBlock2Size > #embedBoxLeft {
   display: grid;
@@ -338,7 +340,8 @@ body {
   grid-template-rows: max-content 50px;
   grid-template-columns: minmax(0px, 360px) minmax(0px, 950px);
   grid-template-areas: "lis vid " "vote vote ";
-  column-gap: 25px;
+  -moz-column-gap: 25px;
+       column-gap: 25px;
   row-gap: 30px;
   justify-content: center;
 }
@@ -391,7 +394,9 @@ body {
   margin: 10px;
 }
 #votingBlock5Size > #rankedListBox > div > p {
-  user-select: none;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
 }
 #votingBlock5Size > #rankedListBox > div:hover:not(:has(:nth-child(1):hover)):not(.selected) {
   border-color: var(--color-accent-1st);
@@ -432,28 +437,6 @@ body {
   grid-area: b;
 }
 
-#votingBoxErrorBox {
-  width: 100%;
-  height: 150px;
-  position: absolute;
-  display: grid;
-  justify-items: center;
-  align-items: center;
-  left: 0%;
-  top: calc(50% - 75px);
-}
-#votingBoxErrorBox > p {
-  text-align: center;
-}
-#votingBoxErrorBox > p:nth-child(1) {
-  font-size: 55px;
-  color: var(--color-text-1st);
-}
-#votingBoxErrorBox > p:nth-child(2) {
-  font-size: 24px;
-  color: var(--color-text-2nd);
-}
-
 #errField {
   grid-area: errBox;
   display: grid;
@@ -466,7 +449,8 @@ body {
   display: grid;
   grid-template-columns: 1fr minmax(0px, 1000px) 1fr;
   grid-template-areas: ". c .";
-  column-gap: 35px;
+  -moz-column-gap: 35px;
+       column-gap: 35px;
 }
 #infoAndHelpBox > div {
   grid-area: c;
@@ -484,9 +468,6 @@ body {
   display: grid;
   justify-items: center;
   align-items: center;
-  row-gap: 16px;
-  padding-left: 40px;
-  padding-right: 40px;
 }
 #mainErrorPane > p {
   text-align: center;
@@ -502,10 +483,4 @@ body {
 .hidden {
   visibility: hidden;
   display: none !important;
-}
-
-.invisible {
-  visibility: hidden !important;
-}
-
-/*# sourceMappingURL=voting.css.map */
+}/*# sourceMappingURL=voting.css.map */

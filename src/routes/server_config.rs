@@ -29,7 +29,7 @@ struct IncomingGetRequest {
 
 
 pub fn handle_get(request: &Request, _db: &mut Transaction, _user: &User, state: &mut State) -> Response {
-    let IncomingGetRequest { token} = try_or_400!(rouille::input::json_input(request));
+    let IncomingGetRequest { token} = try_or_400!(serde_qs::from_str::<IncomingGetRequest>(request.raw_query_string()));
 
     if !state.validate_token(&token) { return Response::message_json("bad credentials").with_status_code(401); }
 
