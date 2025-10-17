@@ -4,14 +4,16 @@ The voting website to be used for shounic's upcoming best clip of the year conte
 
 ## TODO
 
-- [ ] Voting frontend
-   - [ ] Html
-   - [ ] Js
+- [x] Voting frontend
+   - [x] Html
+   - [x] Js
 - [ ] Frontend admin dashboard
+   - [x] Config
+   - [ ] Table Dashboard
+   - [ ] Upload
 - [x] server/config endpoint
 - [x] server/tables endpoint
 - [x] Refactor state struct to not be so ass
-- [ ] Re-write interactions with the database so it isn't so ass
 - [x] Prevent voting round value from ever decreasing
 - [x] Make server/tables endpoint target single rows only
 - [ ] Figure out how tf raw submissions are going to be handled
@@ -29,4 +31,5 @@ The voting website to be used for shounic's upcoming best clip of the year conte
 - [x] Add the ability to send submission usernames to the frontend
 - [x] Add vote cooldown
 - [x] Add login cooldown
+- [x] Fix vote limits
 
