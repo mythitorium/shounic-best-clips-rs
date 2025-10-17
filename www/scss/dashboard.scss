@@ -7,6 +7,7 @@
     --color-main-1st: #ffffff;
     --color-main-2nd: #f1f1f1;
     --color-main-3rd: #acacac;
+    --color-main-4th: #c0c0c0;
     --color-trim-1st: #000000;
     --color-trim-2nd: #1d1d1da6;
     --color-trim-3rd: #1d1d1d9c;
@@ -46,7 +47,7 @@ html {
     flex: 1;
 }
 
-p, li, td, tr, label {
+p, li, label {
     @include fontStyle(16px);
     padding: 0;
     margin: 0;
@@ -70,9 +71,50 @@ input {
     margin-bottom: 8px;
 }
 
+
+select {
+    @include fontStyle(16px);
+}
+
 input:disabled {
     color: var(--color-text-2nd);
 }
+table {
+    width: 100%;
+    border-spacing: 0;
+}
+
+tr:nth-child(even) {
+    background-color: var(--color-main-2nd);
+}
+tr:nth-child(odd) {
+    background-color: var(--color-main-4th);
+}
+tr:nth-child(1) {
+    background-color: transparent
+}
+
+
+td, th, tr {
+    @include fontStyle(16px);
+    padding: 2px 8px 2px 8px;
+}
+
+td:not(:last-child), th:not(:last-child) {
+    border-right: 1px solid var(--color-trim-3rd);
+}
+
+th {
+    width: 1fr;
+    text-align: left;
+    padding: 8px;
+}
+
+tr:hover {
+    background-color: transparent;
+    outline: 1px solid var(--color-trim-1st);
+}
+
 
 //
 // Styling
@@ -86,17 +128,22 @@ body {
         grid-template-rows: 45px 25px 1fr;
         row-gap: 4px;
 
+        //
+        // TAB BAR
+        //
         > :nth-child(1) {
             background-color: var(--color-trim-3rd);
             padding-top: 12px;
             padding-left: 26px;
             border-bottom: 1px solid var(--color-trim-1st);
             display: grid;
-            grid-template-columns: 135px 135px 1fr;
-            grid-template-areas: "t1 t2 .";
+            grid-template-columns: 135px 135px 135px 135px 1fr;
+            grid-template-areas: "t1 t2 t3 t4.";
             column-gap: 0px;
             > :nth-child(1) { grid-area: t1; border-right: none; }
-            > :nth-child(2) { grid-area: t2; z-index: 0; }
+            > :nth-child(2) { grid-area: t2; border-right: none; z-index: 0; }
+            > :nth-child(3) { grid-area: t3; border-right: none; z-index: 0; }
+            > :nth-child(4) { grid-area: t4; z-index: 0; }
             > * {
                 height: calc(100% - 1px);
                 border: 1px solid var(--color-trim-1st);
@@ -117,9 +164,16 @@ body {
                 background-color: var(--color-main-1st);
             }
         }
+        //
+        // ERROR FIELD
+        //
         > :nth-child(2) { padding-left: 30px; padding-right: 30px; }
-        > :nth-child(3) { 
-            padding-left: 30px; padding-right: 30px; 
+        //
+        // DASHBOARD
+        //
+        > :nth-child(3) {  
+            position: relative;
+            padding-left: 30px; padding-right: 30px; padding-bottom: 30px;
         }
     }
     > #login {
@@ -127,6 +181,10 @@ body {
         padding: 30px;
     }
 }
+
+//
+// CONFIG REGION
+//
 
 #configRegion > form {
     > p {
@@ -139,6 +197,62 @@ body {
         font-size: 14px;
     }
 }
+
+//
+// DASHBOARD REGION
+// 
+
+#dashboardRegion {
+    display: grid;
+    grid-template-columns: 800px 1fr;
+    grid-template-rows: min-content min-content 1fr;
+    grid-template-areas:
+    "selectBar  detailsPane"
+    "pageSelect detailsPane"
+    "tablePane  detailsPane"
+    ;
+    height: 100%;
+    column-gap: 12px;
+    row-gap: 8px;
+    > :nth-child(1) {
+        grid-area: selectBar;
+        display: grid;
+        grid-template-columns: repeat(2, min-content) 1fr repeat(4, min-content);
+        align-items: center;
+        column-gap: 8px;
+    }
+    > :nth-child(2) {
+        grid-area: pageSelect;
+        display: grid;
+        grid-template-columns: 1fr min-content min-content min-content 1fr;
+        grid-template-areas: ". a b c .";
+        column-gap: 8px;
+        align-items: center;
+        > :nth-child(1) { grid-area: a; }
+        > :nth-child(2) { grid-area: b; }
+        > :nth-child(3) { grid-area: c; }
+    }
+    > :nth-child(3) {
+        grid-area: tablePane;
+        overflow-y: scroll;
+        border: 1px solid var(--color-trim-1st);
+    }
+    > :nth-child(4) {
+        grid-area: detailsPane;
+    }
+}
+
+//
+// ACTIONS REGION
+//
+
+//
+// UPLOAD REGION
+//
+
+//
+// OTHER 
+//
 
 .hidden { visibility: hidden; display: none !important; }
 

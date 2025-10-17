@@ -141,6 +141,9 @@ body {
   grid-template-rows: 1fr;
   grid-template-areas: ". f s e .";
 }
+#stageBox > div > p {
+  user-select: none;
+}
 #stageBox > div {
   padding: 0;
   display: grid;
@@ -434,22 +437,28 @@ body {
 
 #votingBoxErrorBox {
   width: 100%;
-  height: 150px;
+  height: 100%;
   position: absolute;
   display: grid;
-  justify-items: center;
-  align-items: center;
+  grid-template-rows: 1fr min-content min-content 1fr;
+  grid-template-areas: "." "h" "t" ".";
+  row-gap: 30px;
   left: 0%;
-  top: calc(50% - 75px);
+  top: 0%;
+  background-color: var(--color-main-1st);
+  transition: 0.15s;
 }
 #votingBoxErrorBox > p {
   text-align: center;
+  height: min-content;
 }
 #votingBoxErrorBox > p:nth-child(1) {
+  grid-area: h;
   font-size: 55px;
   color: var(--color-text-1st);
 }
 #votingBoxErrorBox > p:nth-child(2) {
+  grid-area: t;
   font-size: 24px;
   color: var(--color-text-2nd);
 }

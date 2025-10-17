@@ -19,12 +19,18 @@
 </head>
 <body>
     <div id="dashboard">
-        <div>
+        <div id="tabBar">
             <div id="configTab" onclick="tabClicked('config')">
                 <p>Server Config</p>
             </div>
             <div id="dashboardTab" onclick="tabClicked('dash')">
                 <p>Dashboard</p>
+            </div>
+            <div id="actionsTab" onclick="tabClicked('actions')">
+                <p>Actions</p>
+            </div>
+            <div id="uploadTab" onclick="tabClicked('upload')">
+                <p>Upload</p>
             </div>
         </div>
         <div>
@@ -48,7 +54,7 @@
                     <p>
                         What the displayed countdown listed underneath the current stage is counting down to. 
                         <br>
-                        Unix in seconds. Reaching zero has no effect.
+                        Unix in seconds. Reaching zero does nothing.
                     </p>
                         <br>
                     <label for="voting_stage">Voting Stage:</label>
@@ -57,8 +63,6 @@
                     <br>
                     <p>
                         What "stage" of voting the contest is on. Purely visual, dictates what 'stage' is highlighted to the user. 
-                        <br>
-                        Do not set to a value greater than 3. Can be decreased without issue
                     </p>
                     <br>
                     <label for="limit_votes">Limit Votes:</label>
@@ -99,11 +103,13 @@
                         </li>
                     </ul>
                     <p>
-                        Highly sensitive value. Do not change on a whim. Do not change rapidly. 
+                        This is the only way to increment a round. Do not change on a whim. Do not change rapidly. Do not increase.
                         <br>
-                        <b>Changes cannot be reverted</b>, server will actively refuse if a new value is greater than an old one. 
+                        <b>Changes cannot be reverted</b>
                         <br>
-                        If changing, change in combination with other config parameters in one request.
+                        If changing, it is recommended to change in combination with other config parameters in one request.
+                        <br>
+                        If altering Video Per Vote, you <b>must</b> alter this value as well    
                     </p>
                     <br>
                     <label for="include_usernames">Include Usernames:</label>
@@ -119,18 +125,70 @@
                     <input id="postConfigButton" type="button" value="Save Changes" onclick="postConfigChanges()"> 
                     <input id="discardConfigChangesButton" type="button" value="Discard Changes" onclick="revertConfigChanges()">
                     <p>
-                        Do not mess with shit on a whim, you will break something and ruin either in integrity of the vote or break the website.
-                        <br>
-                        The backend does minimal checks when receiving these values. <b>Do not fuck up.</b> 
+                        Warning: The backend does minimal checks when receiving these values. A mistake will break something <b>Do not fuck up.</b> 
                     </p>
                 </form>
             </div>
             <div id="dashboardRegion" class="hidden">
+                <div>
+                    <label for="dashboardTableSelect">Table:</label>
+                    <select type="dropdown" id="dashboardTableSelect" name="dashboardTableSelect">
+                            <option value="videos">All Videos</option>
+                            <option value="rankedVideos">Vote Rankings</option>
+                            <option value="users">Users</option>
+                    </select>
+                    <div></div> 
+                    <label for="dashboardRoundSelect">Round:</label>
+                    <input type="number" min="1" max="10" name="dashboardRoundSelect" id="dashboardRoundSelect" value="1">
+                    <label for="dashboardCategorySelect">Category:</label>
+                    <input type="number" min="1" max="2" name="dashboardCategorySelect" id="dashboardCategorySelect" value="1">
+                </div>
+                <div>
+                    <button><</button>
+                    <p id="pageLabel">1</p>
+                    <button>></button>
+                </div>
+                <div>
+                    <table>
+                        <tr>
+                            <th>test1</th><th>test2</th>
+                        </tr>
+                        <tr>
+                            <td>test1</td><td>test2</td>
+                        </tr>
+                        <tr>
+                            <td>test1</td><td>test2</td>
+                        </tr>
+                        <tr>
+                            <td>test1</td><td>test2</td>
+                        </tr>
+                        <tr>
+                            <td>test1</td><td>test2</td>
+                        </tr>
+                    </table>
+                </div>
+                <div></div>
+            </div>
+            <div id="actionsRegion" class="hidden">
+                <button>Reset Voting</button>
+                <p>
+                    Hard reset on all votes and all voting progress. 
+                    <br><br>
+                    Elimination threshold is reset to its default value (9999) and the internal round counter is reset to 1.
+                    <br>
+                    All votes are deleted from the database.
+                    <br><br>
+                    No other config parameters are altered.
+                    <br>
+                    <b>DO NOT PRESS</b>
+                </p>
+            </div>
+            <div id="uploadRegion" class="hidden">
             </div>
         </div>
     </div>
     <div id="login" class="hidden">
-        <p>pckXklzik5ri</p>
+        <p style="height: 30px;">pckXklzik5ri</p>
         <form>
             <label for="login_username">Username:</label>
             <input type="text" id="loginUsername" name="login_username">

@@ -1,5 +1,29 @@
 //
 //
+// token caching DO NOT PUSH TO PRODUCTION BRUH
+//
+//
+
+
+( async function() {
+    if (!(localStorage.getItem('t') === null)) {
+        t = localStorage.getItem('t');
+        let payload = await request("/server/config", { token: t }, null, "GET");
+        console.log(payload);
+        if (!(payload === null)) {
+            completeLogin();
+        }
+    }
+} )();
+
+
+function cacheToken() {
+    localStorage.setItem('t', t);
+}
+
+
+//
+//
 //
 //
 //
@@ -7,10 +31,15 @@
 
 var t;
 var configObj;
-var loadedConfigForTheFirstTime = false;
-var loadedDashboardForTheFirstTime = false;
+var loadedForTheFirstTime = {
+    config: false,
+    dashboard: false,
+    actions: false,
+    upload: false
+};
 const inputIds = ["allow_voting", "unix_deadline", "voting_stage", "limit_votes", "videos_per_vote", "elimination_threshold", "include_usernames"];
 var liveNumberOfChangedInputs = 0;
+var activeTab = "";
 
 
 //
@@ -96,6 +125,8 @@ function swapBetween(toId, fromId, classString) {
 
     getById("configRegion").classList.add("unloaded");
     getById("dashboardRegion").classList.add("unloaded");
+    getById("actionsRegion").classList.add("unloaded");
+    getById("uploadRegion").classList.add("unloaded");
 
     swapBetween("dashboard", "login", "hidden");
 } )();
@@ -110,33 +141,80 @@ function swapBetween(toId, fromId, classString) {
 
 function tabClicked(tab) {
     clearErrField();
-    switch (tab) {
-        case "config":
-            swapBetween("configTab", "dashboardTab", "selected");
-            swapBetween("dashboardRegion", "configRegion", "hidden");
-            if (loadedConfigForTheFirstTime === false) {
-                getConfigParameters();
-            }
-            break;
-        case "dash":
-            swapBetween("dashboardTab", "configTab", "selected");
-            swapBetween("configRegion", "dashboardRegion", "hidden");
-            break;
-        default:
-            break;
+    unselectAllTabs();
+    if (!(activeTab === tab)) {
+        switch (tab) {
+            case "config":
+                getById("configRegion").classList.remove("hidden");
+                getById("configTab").classList.add("selected");
+                break;
+            case "dash":
+                getById("dashboardRegion").classList.remove("hidden");
+                getById("dashboardTab").classList.add("selected");
+                break;
+            case "actions":
+                getById("actionsRegion").classList.remove("hidden");
+                getById("actionsTab").classList.add("selected");
+                break;
+            case "upload":
+                getById("uploadRegion").classList.remove("hidden");
+                getById("uploadTab").classList.add("selected");
+                break;
+            default:
+                break;
+        }
+
+        activeTab = tab;
+        attemptFirstTimeLoad(tab);
     }
 }
 
 
-async function getConfigParameters() {
-    let payload = await request("/server/config", { token: t }, null, "GET");
-    if (!(payload === null)) {
-        configObj = payload;
-        if (loadedConfigForTheFirstTime === false) {
-            loadedConfigForTheFirstTime = true;
-            revertConfigChanges();
-            getById("configRegion").classList.remove("unloaded");
-        }
+
+function unselectAllTabs() {
+    for (tab of getById("tabBar").children) {
+        tab.classList.remove("selected");
+    }
+
+    for (region of ["configRegion", "dashboardRegion", "actionsRegion", "uploadRegion"]) {
+        getById(region).classList.add("hidden");
+    }
+}
+
+
+async function attemptFirstTimeLoad(tab) {
+    switch (tab) {
+        case "config":
+            if (!loadedForTheFirstTime.config) {
+                let payload = await request("/server/config", { token: t }, null, "GET");
+                if (!(payload === null)) {
+                    loadedForTheFirstTime.config = true;
+                    configObj = payload;
+                    revertConfigChanges();
+                    getById("configRegion").classList.remove("unloaded");
+                }
+            }
+            break;
+        case "dash":
+            if (!loadedForTheFirstTime.dashboard) {
+                getById("dashboardRegion").classList.remove("unloaded");
+                loadedForTheFirstTime.dashboard = true;
+            }
+            break;
+        case "actions":
+            if (!loadedForTheFirstTime.actions) {
+                getById("actionsRegion").classList.remove("unloaded");
+                loadedForTheFirstTime.actions = true;
+            }
+            break;
+        case "upload":
+            if (!loadedForTheFirstTime.upload) {
+                getById("uploadRegion").classList.remove("unloaded");
+                loadedForTheFirstTime.upload = true;
+            }
+            break;
+        default:
+            break;
     }
 }
 
@@ -146,10 +224,12 @@ async function login() {
     if (!(payload === null)) {
         t = payload.token;
         completeLogin();
+        cacheToken();
     } else {
         clearLoginFields();
     }
 }
+
 
 function clearInputs() {
     for (id of inputIds) {
@@ -162,7 +242,6 @@ function completeLogin() {
     swapBetween("login", "dashboard", "hidden");
     tabClicked("config");
 }
-
 
 
 function inputChanged(inputId) {
@@ -220,7 +299,6 @@ async function postConfigChanges() {
         revertConfigChanges();
     }
 }
-
 
 
 function isInputDifferent(inputId) {

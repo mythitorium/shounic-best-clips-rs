@@ -18,7 +18,7 @@ pub const NUMBER_OF_CATEGORIES: i64 = 2;
 const CONFIG_FILENAME: &str = "server_config.toml";
 const ALLOW_VOTING_BY_DEFAULT: bool = true;
 const LOGIN_LOCKOUT_TIME_SECS: u64 = 180;
-const CLAIMS_LIFETIME_MINS: u64 = 30;
+const CLAIMS_LIFETIME_MINS: u64 = 120;
 
 pub struct State {
     config: Config,
@@ -124,7 +124,7 @@ impl State {
 
 
     pub fn update_voter_record(&mut self, user_id: i64, category: i64) {
-        if self.config.limit_votes && category < (NUMBER_OF_CATEGORIES + 1) && category > 0 {
+        if self.config.limit_votes {
                self.voter_cache
                 .entry(user_id)
                 .and_modify(|votes| votes[category as usize - 1] = true )
@@ -134,6 +134,8 @@ impl State {
                     d 
                 });
         }
+
+        println!("{:?}", self.voter_cache);
     }
     
 
@@ -174,17 +176,15 @@ impl State {
 
 
     pub fn do_round_progression(&mut self, db: &mut Transaction, new_elimination_threshold: i64) {
-        // Apply/update parameters
-        self.config.elimination_threshold = new_elimination_threshold;
-        self.config.voting_round += 1;
-        self.config.save();
-
         // Eliminate
         for i in 1..=NUMBER_OF_CATEGORIES {
             db.execute(QUERY_ELIMINATE_VIDEOS, [i, self.current_round(), i, new_elimination_threshold]);
         }
 
+        // Update config
         self.voter_cache.clear();
+        self.config.elimination_threshold = new_elimination_threshold;
+        self.config.voting_round += 1;
         self.config.save();
     }
 

@@ -19,6 +19,7 @@ use routes::MessageJson;
 
 use rouille::{self, router};
 use std::error::Error as StdError;
+use std::time;
 //use serde;
 //use serde_derive;
 //use serde_derive::Serialize;
@@ -103,7 +104,7 @@ fn main() {
             Ok((user, ip)) => {
                 // Take ip outside of scope so it can be printed to terminal
                 cached_ip = ip;
-                
+
                 // Handle route
                 response = router!(request,
                     // Html

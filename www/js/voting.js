@@ -14,17 +14,19 @@ window.onresize = resizeEmbeds;
 //
 //
 
+
 var givenCategory;
 var desiredCategory = 0;
 var votingStage = 0;
 var currentVotingStageP = getById("stage1TimeP");
-var currentDeadline = 0;
+var currentDeadline = -1;
 
 var videos = [];
 
 const updateTimeFunc = setInterval(updateDeadlineCountdown, 1000);
 
 initiateNewVote();
+
 
 //
 //
@@ -44,43 +46,45 @@ async function request(endpoint, queries, payload, method) {
             'Content-Type': 'application/json'
         };
     }
-    console.log(queries);
-    console.log(new URLSearchParams(queries).toString());
     if ((queries === null)) { url = endpoint } else { url = endpoint + "?" + (new URLSearchParams(queries)).toString(); }
-    console.log(url);
 
-    return await window.fetch(url, options).then((response) => {
+    let status = "";
+    let fallbackText = "";
+
+    let json = await window.fetch(url, options).then((response) => {
         return [response.status, response.statusText, response.json()];
     }).then((responseArr) => {
-        let json = responseArr[2];
-        let status = responseArr[0];
-        let fallbackText = responseArr[1];
-
-        if (status === 200) {
-            clearErrField();
-            return json;
-        } else {
-            if (status === 423) {
-                getById("stageBox").classList.add("hidden");
-                getById("categoryHeaderBox").classList.add("hidden");
-                getById("categorySelectionBox").classList.add("hidden");
-                getById("categoryInfoBox").classList.add("hidden");
-                getById("votingBox").classList.add("hidden");
-                getById("errField").classList.add("hidden");
-                getById("infoAndHelpBox").classList.add("hidden");
-
-                getById("mainErrorPaneHeader").innerHTML = "Voting closed";
-                getById("mainErrorPaneText").innerHTML = "Voting is currently not allowed at this time";
-            } else {
-                if (Object.hasOwn(json, "message")) {
-                    getById("errFieldP").innerHTML = response.message;
-                } else {
-                    getById("errFieldP").innerHTML = "Error: " + fallbackText;
-                }
-            }
-            return null;
-        }
+        status = responseArr[0];
+        fallbackText = responseArr[1];
+        return responseArr[2];
     });
+
+
+    if (status === 200) {
+        clearErrField();
+        return json;
+    } else {
+        if (status === 423) {
+            getById("stageBox").classList.add("hidden");
+            getById("categoryHeaderBox").classList.add("hidden");
+            getById("categorySelectionBox").classList.add("hidden");
+            getById("categoryInfoBox").classList.add("hidden");
+            getById("votingBox").classList.add("hidden");
+            getById("errField").classList.add("hidden");
+            getById("infoAndHelpBox").classList.add("hidden");
+        
+            getById("mainErrorPaneHeader").innerHTML = "Voting closed";
+            getById("mainErrorPaneText").innerHTML = "Voting is currently not allowed at this time";
+        } else {
+            console.log(json);
+            if (Object.hasOwn(json, "message")) {
+                getById("errFieldP").innerHTML = "Error: " + json.message;
+            } else {
+                getById("errFieldP").innerHTML = "Error: " + fallbackText;
+            }
+        }
+        return null;
+    }
 }
 
 
@@ -101,41 +105,20 @@ function clearErrField() {
 //
 //
 
-
-if (localStorage.getItem('isDarkMode') === 'true') {
-    body.setAttribute('data-theme', 'dark');
-    themeToggleIcon.classList.remove('ph-moon-stars');
-    themeToggleIcon.classList.add('ph-sun');
-} else {
-    body.setAttribute('data-theme', 'light');
-    themeToggleIcon.classList.remove('ph-sun');
-    themeToggleIcon.classList.add('ph-moon-stars');
-}
-
-
-//
-//
-// Dark mode logic
-//
-//
-
-
 function swapTheme() {
-    let body = getById("body");
     let themeToggleIcon = getById("themeToggleIcon");
-    if(body.getAttribute('data-theme') === 'dark') {
-        body.setAttribute('data-theme', 'light');
+    if(document.documentElement.getAttribute('data-theme') === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'light');
         localStorage.setItem('isDarkMode', false);
-        themeToggleIcon.classList.remove('ph-sun');
-        themeToggleIcon.classList.add('ph-moon-stars');
+        //themeToggleIcon.classList.remove('ph-sun');
+        //themeToggleIcon.classList.add('ph-moon-stars');
     } else {
-        body.setAttribute('data-theme', 'dark');
+        document.documentElement.setAttribute('data-theme', 'dark');
         localStorage.setItem('isDarkMode', true);
-        themeToggleIcon.classList.remove('ph-moon-stars');
-        themeToggleIcon.classList.add('ph-sun');
+        //themeToggleIcon.classList.remove('ph-moon-stars');
+        //themeToggleIcon.classList.add('ph-sun');
     }
 }
-
 
 //
 //
@@ -151,64 +134,22 @@ new Sortable(rankedListBox, {
     onEnd: function (evt) {
         let ranks = ['1st', '2nd', '3rd', '4th', '5th'];
         let counter = 0;
-        for (el of evt.to.children) {
-            el.querySelector('#rankLabel').innerHTML = ranks[counter];
+        for (rankBox of evt.to.children) {
+            rankBox.querySelector('#rankLabel').innerHTML = ranks[counter];
             counter += 1;
+            if (!rankBox.disabled) {
+                toggleVotingButton("rankedVoteButton", true);
+            }
         }
     }
 });
 
+
 //
 //
-// Main
+// VOTING
 //
 //
-
-
-function applyStage() {
-    // Configure stage boxes
-    let stageBoxes = ["stage1Box", "stage2Box", "stage3Box"];
-    for (stageNot of stageBoxes) {
-        let stageNotEl = getById(stageNot);
-        stageNotEl.classList.remove("stageFlagActive");
-        stageNotEl.classList.add("stageFlagDefault");
-    }
-    let stageIsEl = getById(stageBoxes[votingStage - 1]);
-    stageIsEl.classList.add("stageFlagActive");
-    stageIsEl.classList.remove("stageFlagDefault");
-
-    let stagePs = ["stage1TimeP", "stage2TimeP", "stage3TimeP"];
-    currentVotingStageP = getById(stagePs[votingStage - 1]);
-}
-
-
-function selectDesiredCategory(newDesiredCategory, requestNewVote) {
-    if (!(desiredCategory === newDesiredCategory)) {
-        for (let i = 0; i < 3; i++) {
-            getById("category" + i + "Button").classList.remove("selected");
-        }
-
-        getById("category" + newDesiredCategory + "Button").classList.add("selected");
-
-        desiredCategory = newDesiredCategory;
-
-        if (requestNewVote) { initiateNewVote() };
-    }
-}
-
-
-function selectRankedVideo(videoIndex) {
-    const clickedBox = getById("rankBox" + (videoIndex + 1));
-
-    if (!(clickedBox.classList.contains("selected"))) {
-        refreshEmbed("rankedEmbedBox", "rankedFrame", videos[videoIndex].youtube_id);
-
-        for (let i = 1; i <= 5; i++) {
-            getById("rankBox" + (i)).classList.remove("selected");
-        }
-        clickedBox.classList.add("selected");
-    }
-}
 
 
 async function initiateNewVote() {
@@ -217,17 +158,14 @@ async function initiateNewVote() {
     toggleVotingButton("voteButtonRight", false);
     toggleVotingButton("rankedVoteButton", false);
 
-    // Resent any potential voting box error message
-    getById("votingBlock2Size").classList.remove("invisible");
-    getById("votingBlock5Size").classList.remove("invisible");
+    // Reset any potential voting box error message
     getById("votingBoxErrorBox").classList.add("hidden");
+    getById("votingBlock2Size").classList.add("invisible");
+    getById("votingBlock5Size").classList.add("invisible");
 
     // API call
-    console.log(desiredCategory);
-    console.log({ c: desiredCategory });
     let response = await request("vote", { c: desiredCategory }, null, "GET");
 
-    console.log(response);
     if (response === null) {
         return;
     }
@@ -239,7 +177,7 @@ async function initiateNewVote() {
     videos = response.videos;
 
     // Apply stage subtext
-    applyStage();
+    updateStage();
     if (desiredCategory === 0) {
         if (givenCategory > 0) {
             let categoryLabels = ["Comedy", "Skill"];
@@ -263,21 +201,32 @@ async function initiateNewVote() {
     // Setup voting pane
     switch (videos.length) {
         case 2:
+            // Swap from 
+            getById("votingBlock2Size").classList.remove("invisible");
+            getById("votingBlock5Size").classList.remove("invisible");
             getById("votingBlock2Size").classList.remove("hidden");
             getById("votingBlock5Size").classList.add("hidden");
+
             refreshEmbed("embedBoxLeft", "frameLeft", videos[0].youtube_id);
             refreshEmbed("embedBoxRight", "frameRight", videos[1].youtube_id);
             toggleVotingButton("voteButtonLeft", true);
             toggleVotingButton("voteButtonRight", true);
             break;
         case 5:
+            getById("votingBlock2Size").classList.remove("invisible");
+            getById("votingBlock5Size").classList.remove("invisible");
             getById("votingBlock5Size").classList.remove("hidden");
             getById("votingBlock2Size").classList.add("hidden");
-            for (let i = 1; i <= 5; i++) {
-                document.querySelector("#rankBox" + i + " :nth-child(2)").innerHTML = (videos[i - 1].u === null) ? "" : videos[i - 1].u ;
-                document.querySelector("#rankBox" + i + " :nth-child(3)").innerHTML = "Submission #" + videos[i - 1].id;
+
+            let i = 0;
+            for (rankBox of getById("rankedListBox").children) {
+                rankBox.classList.remove("selected");
+                rankBox.children[1].innerHTML = (videos[i].u === null) ? "" : videos[i].u;
+                rankBox.children[2].innerHTML = "Submission #" + videos[i].id
+                rankBox.dataset.videoIndex = i;
+                i += 1;
             }
-            clearEmbed("rankedEmbedBox", "rankedFrame");
+            clearEmbed("rankedFrame");
             break;
         case 0:
             getById("votingBlock2Size").classList.add("invisible");
@@ -304,6 +253,86 @@ async function initiateNewVote() {
 }
 
 
+function submitRankedVote() {
+    let vote = [];
+    for (rankBox of getById("rankedListBox").children) {
+        vote.push(videos[Number(rankBox.dataset.videoIndex)].id);
+    }
+    postVote(vote);
+}
+
+
+function submitVote(index) {
+    vote = [videos[index].id, videos[Number(!index)].id];
+    postVote(vote);
+}
+
+
+
+async function postVote(vote) {
+    toggleVotingButton("voteButtonLeft", false);
+    toggleVotingButton("voteButtonRight", false);
+    toggleVotingButton("rankedVoteButton", false);
+    let response = await request("vote", null, { vote: vote }, "POST");
+    if (!(response === null)) {
+        clearEmbed("frameLeft");
+        clearEmbed("frameRight");
+        clearEmbed("rankedFrame");
+        initiateNewVote();   
+    }
+    toggleVotingButton("voteButtonLeft", true);
+    toggleVotingButton("voteButtonRight", true);
+    toggleVotingButton("rankedVoteButton", true);
+}
+
+
+//
+//
+// SECONDARY VOTING
+//
+//
+
+
+function selectRankedVideo(videoIndex) {
+    const clickedRankBox = getById("rankBox" + (videoIndex + 1));
+
+    if (!(clickedRankBox.classList.contains("selected"))) {
+        refreshEmbed("rankedEmbedBox", "rankedFrame", videos[videoIndex].youtube_id);
+
+        for (rankBox of getById("rankedListBox").children) {
+            rankBox.classList.remove("selected");
+        }
+        clickedRankBox.classList.add("selected");
+
+        if (!clickedRankBox.disabled) {
+            toggleVotingButton("rankedVoteButton", true);
+        }
+    }
+}
+
+
+function selectDesiredCategory(newDesiredCategory, requestNewVote) {
+    if (!(desiredCategory === newDesiredCategory)) {
+        for (let i = 0; i < 3; i++) {
+            getById("category" + i + "Button").classList.remove("selected");
+        }
+
+        getById("category" + newDesiredCategory + "Button").classList.add("selected");
+
+        desiredCategory = newDesiredCategory;
+
+        if (requestNewVote) { initiateNewVote() };
+    }
+}
+
+
+//
+//
+// UI TOGGLING
+//
+//
+
+
 function toggleCategoryButton(desiredCategory, toggleTo) {
     getById("category" + desiredCategory + "Button").disabled = !toggleTo;
 }
@@ -314,12 +343,30 @@ function toggleVotingButton(buttonId, toggleTo) {
 }
 
 
-function clearEmbed(embedBoxId, frameId) {
-    let frame = getById(frameId);
-    if (!(frame === null)) {
-        frame.remove();
+function toggleVotingBoxErrorState(toggleTo) {
+    if (!toggleTo) {
+        getById("votingBlock2Size").classList.remove("invisible");
+        getById("votingBlock5Size").classList.remove("invisible");
+        getById("votingBoxErrorBox").classList.add("hidden");
+    } else {
+        getById("votingBlock2Size").classList.add("invisible");
+        getById("votingBlock5Size").classList.add("invisible");
+        getById("votingBoxErrorBox").classList.remove("hidden");
     }
 }
+
+
+function swapHiddenBetween(toId, fromId) {
+    getById(toId).classList.add("hidden");
+    getById(fromId).classList.remove("hidden");
+}
+
+
+//
+//
+// EMBEDS
+//
+//
 
 
 function refreshEmbed(embedBoxId, frameId, youtubeId) {
@@ -344,6 +391,14 @@ function refreshEmbed(embedBoxId, frameId, youtubeId) {
 }
 
 
+function clearEmbed(frameId) {
+    let frame = getById(frameId);
+    if (!(frame === null)) {
+        frame.remove();
+    }
+}
+
+
 function resizeEmbeds() {
     let resizeIframe = function(id, rect) {
         let el = getById(id);
@@ -364,24 +419,50 @@ function resizeEmbeds() {
 }
 
 
-function updateDeadlineCountdown() {
-    // Get today's date and time
-    const now = new Date().getTime();    
-    // Find the distance between now and the countdown date
-    const distance = currentDeadline - now;    
-    // Time calculations for days, hours, minutes and seconds
-    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+//
+//
+// STAGE/PROGRESS BAR
+//
+//
 
-    if (days > 0) {
-        currentVotingStageP.innerHTML = days + "d " + hours + "h " + minutes + "m";
-    } else {
-        currentVotingStageP.innerHTML = hours + "h " + minutes + "m";
+
+function updateStage() {
+    // Configure stage boxes
+    let stageBoxes = ["stage1Box", "stage2Box", "stage3Box"];
+    for (stageNot of stageBoxes) {
+        let stageNotEl = getById(stageNot);
+        stageNotEl.classList.remove("stageFlagActive");
+        stageNotEl.classList.add("stageFlagDefault");
     }
+    let stageIsEl = getById(stageBoxes[votingStage - 1]);
+    stageIsEl.classList.add("stageFlagActive");
+    stageIsEl.classList.remove("stageFlagDefault");
 
-    if (distance < 0) {
-        currentVotingStageP.innerHTML = "0h 0m";
-        clearInterval(updateTimeFunc);
+    let stagePs = ["stage1TimeP", "stage2TimeP", "stage3TimeP"];
+    currentVotingStageP = getById(stagePs[votingStage - 1]);
+}
+
+
+function updateDeadlineCountdown() {
+    if (currentDeadline >= 0) {
+        // Get today's date and time
+        const now = Math.round(new Date().getTime() / 1000);    
+        // Find the distance between now and the countdown date
+        const distance = currentDeadline - now;    
+        // Time calculations for days, hours, minutes and seconds
+        const days = Math.floor(distance / (60 * 60 * 24));
+        const hours = Math.floor((distance % (60 * 60 * 24)) / (60 * 60));
+        const minutes = Math.floor((distance % (60 * 60)) / (60));
+
+        if (days > 0) {
+            currentVotingStageP.innerHTML = days + "d " + hours + "h " + minutes + "m";
+        } else {
+            currentVotingStageP.innerHTML = hours + "h " + minutes + "m";
+        }
+
+        if (distance < 0) {
+            currentVotingStageP.innerHTML = "0h 0m";
+            clearInterval(updateTimeFunc);
+        }
     }
 }

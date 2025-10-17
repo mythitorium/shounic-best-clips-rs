@@ -93,17 +93,14 @@ pub fn handle_get(request: &Request, db: &mut Transaction, user: &User, state: &
         current_deadline: state.current_round_unix_deadline() 
     };
 
-    // don't even bother fetching videos if limit reached
-    if || -> bool {
-        for limit in state.get_voter_record(user.id) { if !limit { return false; } }
-        true
-    }() {
-        return Response::json(&outgoing);
-    }
-
     let mut real_category = c;
     if c == 0 { real_category = (SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() % (NUMBER_OF_CATEGORIES as u128)) as i64 + 1; }
     outgoing.c = real_category;
+
+    // don't even bother fetching videos if limit reached for this category
+    if state.get_voter_record(user.id)[real_category as usize - 1] {
+        return Response::json(&outgoing);
+    }
 
     match prep_votable_videos(&db, real_category, user.id, state.videos_per_vote(), state.do_include_usernames()) {
         DbResult::Ok(videos) => {
@@ -115,7 +112,7 @@ pub fn handle_get(request: &Request, db: &mut Transaction, user: &User, state: &
             return Response::message_json("Failed to fetch videos").with_status_code(500);
         },
         DbResult::Empty => {
-            return Response::json(&outgoing).with_status_code(204);
+            return Response::json(&outgoing).with_status_code(200);
         }
     }
 }
@@ -175,49 +172,52 @@ fn prep_votable_videos(db: &Transaction, mut category: i64, uid: i64, amount: i6
 
 
 #[derive(Deserialize)]
-struct IncomingPostRequest { incoming_list: Vec<i64> }
+struct IncomingPostRequest { vote: Vec<i64> }
 
 
 pub fn handle_post(request: &Request, db: &mut Transaction, user: &User, state: &mut State) -> Response {
     // Parse request
-    let IncomingPostRequest { incoming_list } = try_or_400!(rouille::input::json_input(request));
+    let IncomingPostRequest { vote } = try_or_400!(rouille::input::json_input(request));
 
-    if !state.is_voting_allowed() { Response::message_json("Voting isn't allowed at this time").with_status_code(423); }
+    println!("{:?}", vote);
+
+    if !state.is_voting_allowed() { return Response::message_json("Voting isn't allowed at this time").with_status_code(423); }
     
     // Validate vote by comparing it against the user's active votes
     match || -> Result<Vec<(i64, i64, i64)>, Error> {
         let mut stmt = db.prepare(QUERY_GET_ACTIVE_VOTE_VIDEOS)?;
         let mut rows = stmt.query([user.id])?;
-        let mut active_list: Vec<(i64, i64, i64)> = Vec::new();
+        let mut active_vote: Vec<(i64, i64, i64)> = Vec::new();
         while let Some(row) = rows.next()? {
-            active_list.push((row.get(0)?, row.get(1)?, row.get(1)?));
+            active_vote.push((row.get(0)?, row.get(1)?, row.get(2)?));
         }
-        Ok(active_list)
+        Ok(active_vote)
     }() {
-        Ok(active_list) => {
-            // User voted too fast
+        Ok(active_vote) => {
             let time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
-            if time < active_list[0].2 as u128 {
-                return Response::message_json("You're voting too fast! Slow down!").with_status_code(429);
-            }
 
             // Someone tried to vote before receiving any videos to vote on
-            if active_list.len() == 0 {
-                println!("Invalid vote attempt: User has no active votes, but attempted to submit something anyway: {:?}", incoming_list);
+            if active_vote.len() == 0 {
+                println!("Invalid vote attempt: User has no active votes, but attempted to submit something anyway: {:?}", vote);
                 return Response::message_json("Vote submitted").with_status_code(200);
             }
 
+            // User voted too fast
+            if time < active_vote[0].2 as u128 {
+                return Response::message_json("You're voting too fast! Slow down!").with_status_code(429);
+            }
+
             // Video ids user submitted do not match the contents found in active votes
-            for (id, _, _) in &active_list {
-                if !incoming_list.contains(id) {
-                    println!("Invalid vote attempt: Vote does not match user's active vote: Submitted: {:?}, expected {:?}", incoming_list, active_list);
+            for (id, _, _) in &active_vote {
+                if !vote.contains(id) {
+                    println!("Invalid vote attempt: Vote does not match user's active vote: Submitted: {:?}, expected {:?}", vote, active_vote);
                     return Response::message_json("Vote submitted").with_status_code(200);
                 }
             }
 
             // User attempted to vote with too many or not enough videos
-            if incoming_list.len() != active_list.len() {
-                println!("Invalid vote attempt: Length does not match user's active_vote: Submitted: {}, expected: {}", incoming_list.len(), active_list.len());
+            if vote.len() != active_vote.len() {
+                println!("Invalid vote attempt: Length does not match user's active_vote: Submitted: {}, expected: {}", vote.len(), active_vote.len());
                 return Response::message_json("Vote submitted").with_status_code(200);
             }
 
@@ -232,7 +232,7 @@ pub fn handle_post(request: &Request, db: &mut Transaction, user: &User, state: 
             if let Err(_) = || -> Result<(), Error> {
                 db.execute(QUERY_CLEAR_ACTIVE_VOTES, [user.id])?;
                 let mut index = 0;
-                for id in &incoming_list {
+                for id in &vote {
                     let target = id.clone();
                     let opponent;
                     // if index is 0, opponent id is index 1. otherwise, opponent id is index 0.
@@ -240,24 +240,25 @@ pub fn handle_post(request: &Request, db: &mut Transaction, user: &User, state: 
                     // This does not work if the amount of incoming video ids is greater than 2. 
                     // However, this is designed to allow for vote purging disqualified videos, something which typically wouldn't happen in a final round
                     if index == 0 {
-                        opponent = incoming_list[1];
+                        opponent = vote[1];
                     } else {
-                        opponent = incoming_list[0];
+                        opponent = vote[0];
                     }
-                    let score = incoming_list.len() as i64 - 1 - index;
+                    let score = vote.len() as i64 - 1 - index;
                     db.execute(QUERY_VOTE, [user.id, target, score, opponent, state.current_round(), time as i64])?;
                     
                     index += 1;
                 }
 
-                state.update_voter_record(user.id, active_list[0].1);
+                state.update_voter_record(user.id, active_vote[0].1);
 
                 Ok(())
             }() {
                 return Response::message_json("Failed while casting vote").with_status_code(500);
             }
         },
-        Err(_) => {
+        Err(err) => {
+            //println!("{:?}", err);
             return Response::message_json("Failed while trying to validate vote").with_status_code(500);
         }
     }

@@ -28,8 +28,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+
+    <script>
+        if (localStorage.getItem('isDarkMode') === 'true') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+    </script>
 </head>
-<body id="body" data-theme="light">
+<body id="body">
     <div id="headerBox">
         <p>sho's 2025 TF2 clip contest</p>
         <button onclick="swapTheme()"><i class="ph ph-moon-stars" id="themeToggleIcon"></i></button>
@@ -64,13 +72,13 @@
         <p id="givenCategoryP"></p>
     </div>
     <div id="votingBox">
-        <div id="votingBlock2Size" class="hidden">
+        <div id="votingBlock2Size" class="invisible">
             <div id="embedBoxLeft"><svg xmlns="http://www.w3.org/2000/svg" width="68" height="68" fill="#000000" viewBox="0 0 256 256"><path d="M216,42H40A14,14,0,0,0,26,56V200a14,14,0,0,0,14,14h64a6,6,0,0,0,5.69-4.1l15.12-45.36,37.42-15a6,6,0,0,0,3.34-3.34l15-37.42L225.9,93.69A6,6,0,0,0,230,88V56A14,14,0,0,0,216,42ZM117.77,154.43a6,6,0,0,0-3.46,3.67L99.68,202H40a2,2,0,0,1-2-2V171.17l52.58-52.58a2,2,0,0,1,2.83,0L126,151.15ZM218,83.68,174.1,98.31a6,6,0,0,0-3.67,3.46l-15.05,37.61L138.1,146.3l-36.2-36.2a14,14,0,0,0-19.8,0L38,154.2V56a2,2,0,0,1,2-2H216a2,2,0,0,1,2,2Zm9.51,33.18a6,6,0,0,0-5.41-.82L198.3,124a6,6,0,0,0-3.67,3.47L180,164l-36.56,14.63A6,6,0,0,0,140,182.3L132,206.1a6,6,0,0,0,5.69,7.9H216a14,14,0,0,0,14-14V121.73A6,6,0,0,0,227.51,116.86ZM218,200a2,2,0,0,1-2,2H146.06l4.42-13.26,36.37-14.55a6,6,0,0,0,3.34-3.34l14.55-36.37L218,130.06Z"></path></svg></div>
             <div id="embedBoxRight"><svg xmlns="http://www.w3.org/2000/svg" width="68" height="68" fill="#000000" viewBox="0 0 256 256"><path d="M216,42H40A14,14,0,0,0,26,56V200a14,14,0,0,0,14,14h64a6,6,0,0,0,5.69-4.1l15.12-45.36,37.42-15a6,6,0,0,0,3.34-3.34l15-37.42L225.9,93.69A6,6,0,0,0,230,88V56A14,14,0,0,0,216,42ZM117.77,154.43a6,6,0,0,0-3.46,3.67L99.68,202H40a2,2,0,0,1-2-2V171.17l52.58-52.58a2,2,0,0,1,2.83,0L126,151.15ZM218,83.68,174.1,98.31a6,6,0,0,0-3.67,3.46l-15.05,37.61L138.1,146.3l-36.2-36.2a14,14,0,0,0-19.8,0L38,154.2V56a2,2,0,0,1,2-2H216a2,2,0,0,1,2,2Zm9.51,33.18a6,6,0,0,0-5.41-.82L198.3,124a6,6,0,0,0-3.67,3.47L180,164l-36.56,14.63A6,6,0,0,0,140,182.3L132,206.1a6,6,0,0,0,5.69,7.9H216a14,14,0,0,0,14-14V121.73A6,6,0,0,0,227.51,116.86ZM218,200a2,2,0,0,1-2,2H146.06l4.42-13.26,36.37-14.55a6,6,0,0,0,3.34-3.34l14.55-36.37L218,130.06Z"></path></svg></div>
-            <div><button disabled="true" id="voteButtonLeft" disabled="true">Vote A</button></div>
-            <div><button disabled="true" id="voteButtonRight" disabled="true">Vote B</button></div>
+            <div><button disabled="true" id="voteButtonLeft" disabled="true" onclick="submitVote(0)">Vote A</button></div>
+            <div><button disabled="true" id="voteButtonRight" disabled="true" onclick="submitVote(1)">Vote B</button></div>
         </div>
-        <div id="votingBlock5Size">
+        <div id="votingBlock5Size" class="hidden">
             <div id="rankedListBox">
                     <div id="rankBox1" onclick="selectRankedVideo(0)"><div><i class="ph-bold ph-dots-six-vertical"></i></div><p></p><p></p><p id="rankLabel">1st</p></div>
                     <div id="rankBox2" onclick="selectRankedVideo(1)"><div><i class="ph-bold ph-dots-six-vertical"></i></div><p></p><p></p><p id="rankLabel">2nd</p></div>
@@ -82,9 +90,9 @@
                 <p id="rankedEmbedBoxMessage">Click on a clip on the left to view it</p>
                 <svg id="rankedEmbedBoxSvg" class="hidden" xmlns="http://www.w3.org/2000/svg" width="68" height="68" fill="#000000" viewBox="0 0 256 256"><path d="M216,42H40A14,14,0,0,0,26,56V200a14,14,0,0,0,14,14h64a6,6,0,0,0,5.69-4.1l15.12-45.36,37.42-15a6,6,0,0,0,3.34-3.34l15-37.42L225.9,93.69A6,6,0,0,0,230,88V56A14,14,0,0,0,216,42ZM117.77,154.43a6,6,0,0,0-3.46,3.67L99.68,202H40a2,2,0,0,1-2-2V171.17l52.58-52.58a2,2,0,0,1,2.83,0L126,151.15ZM218,83.68,174.1,98.31a6,6,0,0,0-3.67,3.46l-15.05,37.61L138.1,146.3l-36.2-36.2a14,14,0,0,0-19.8,0L38,154.2V56a2,2,0,0,1,2-2H216a2,2,0,0,1,2,2Zm9.51,33.18a6,6,0,0,0-5.41-.82L198.3,124a6,6,0,0,0-3.67,3.47L180,164l-36.56,14.63A6,6,0,0,0,140,182.3L132,206.1a6,6,0,0,0,5.69,7.9H216a14,14,0,0,0,14-14V121.73A6,6,0,0,0,227.51,116.86ZM218,200a2,2,0,0,1-2,2H146.06l4.42-13.26,36.37-14.55a6,6,0,0,0,3.34-3.34l14.55-36.37L218,130.06Z"></path></svg>
             </div>
-            <div><button id="rankedVoteButton" disabled="true">Submit Vote</button></div>
+            <div><button id="rankedVoteButton" disabled="true" onclick="submitRankedVote()">Submit Vote</button></div>
         </div>
-        <div id="votingBoxErrorBox" class="hidden">
+        <div id="votingBoxErrorBox" class="invisible">
             <p id="votingBoxErrorHeader">Nothing</p>
             <p id="votingBoxErrorText">Theres nothing to vote on at this time</p>
         </div>
