@@ -227,7 +227,7 @@ pub const QUERY_INSERT_PLACEHOLDER_VIDEOS: &str = "
         ('XbAT9M7f9rs', 'Hornet from Silksong', 2, 0, 0),
         ('xZwq8NuZ26U', 'Hornet from Hollow Knight', 2, 0, 0),
         ('ms8uu0zeU88', 'Steel', 2, 0, 0),
-        ('TNs-07nzmSc', 'Tuff', 2, 0, 0),
+        ('TNs-07nzmSc', 'Tuff', 2, 0, 0)
     )
     WHERE NOT EXISTS (SELECT * FROM videos);
 ";

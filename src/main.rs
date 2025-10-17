@@ -55,6 +55,8 @@ fn main() {
     };
 
     let state = Mutex::new(State::new());
+    
+    let _ = 0;
 
     // Initialization tasks
     {
@@ -64,6 +66,7 @@ fn main() {
 
         // Setup database tables and pragmas
         db.execute_batch(QUERY_SETUP).expect("Failed to initialize database");
+        //db.execute_batch(QUERY_INSERT_PLACEHOLDER_VIDEOS).expect("Failed to initialize database");
         
         // Generate voter record cache
         build_voter_record(&db, &mut state).expect("Failed to build voter cache");

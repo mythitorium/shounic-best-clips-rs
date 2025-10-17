@@ -6,14 +6,14 @@
 
 
 ( async function() {
-    if (!(localStorage.getItem('t') === null)) {
-        t = localStorage.getItem('t');
-        let payload = await request("/server/config", { token: t }, null, "GET");
-        console.log(payload);
-        if (!(payload === null)) {
-            completeLogin();
-        }
-    }
+    //if (!(localStorage.getItem('t') === null)) {
+    //    t = localStorage.getItem('t');
+    //    let payload = await request("/server/config", { token: t }, null, "GET");
+    //    console.log(payload);
+    //    if (!(payload === null)) {
+    //        completeLogin();
+    //    }
+    //}
 } )();
 
 
