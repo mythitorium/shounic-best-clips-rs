@@ -207,22 +207,27 @@ pub const QUERY_SETUP: &str = { "
 pub const QUERY_INSERT_PLACEHOLDER_VIDEOS: &str = "
     INSERT INTO videos (youtube_id, uploader_username, category, is_eliminated, is_disqualified)
     SELECT * FROM (VALUES
-    	('WRRC-Iw_OPg', 'user1', 1, 0, 0),
-    	('72eGw4H2Ka8', 'user2', 1, 0, 0),
-    	('4LilrtDfLP0', 'user3', 1, 0, 0),
-    	('uSlB4eznXoA', 'user4', 1, 0, 0),
-    	('i9bYnBb42oY', 'user5', 1, 0, 0),
-    	('lNfCvZl3sKw', 'user6', 1, 0, 0),
-    	('nz_BY7X44kc', 'user7', 1, 0, 0),
-    	('xrziHnudx3g', 'user8', 1, 0, 0),
-    	('4hpbK7V146A', 'user9', 1, 0, 0),
-    	('Ta_-UPND0_M', 'user10', 2, 0, 0),
-    	('JgJUbmGDc6k', 'user11', 2, 0, 0),
-    	('ttArr90NvWo', 'user12', 2, 0, 0),
-    	('mIpnpYsl-VY', 'user13', 2, 0, 0),
-    	('4LilrtDfLP0', 'user14', 2, 0, 0),
-    	('duAGuYeF7zY', 'user15', 2, 0, 0),
-    	('0pnwE_Oy5WI', 'user16', 2, 0, 0)
+    	('nkRcLrAQjsA', 'Cobblestone', 1, 0, 0),
+        ('JQ27nqveNXw', 'Diamond Block', 1, 0, 0),
+        ('TNs-07nzmSc', 'Tuff', 1, 0, 0),
+        ('QbWs2Di_gKY', 'Birch Log', 1, 0, 0),
+        ('rrVm0fXmBMI', 'Coal Ore', 1, 0, 0),
+        ('lrFacq0v0fE', 'Diamond Ore', 1, 0, 0),
+        ('7FLduO7IFE4', 'Logitech g402', 1, 0, 0),
+        ('wh4nCwBc1y0', 'Diet Coke', 1, 0, 0),
+        ('dAJZzjzsUL0', 'Thatfuckingbirdthatihate', 1, 0, 0),
+        ('Z7ApShF1T_4', 'Grass Block', 1, 0, 0),
+        ('i0ifU070gCY', 'Smooth Stone', 2, 0, 0),
+        ('NOAxEa22Oy8', 'Cobblestone', 2, 0, 0),
+        ('P3_wztlA0DM', 'Spruce Planks', 2, 0, 0),
+        ('NyVQ5AuNARQ', 'Jungle Door', 2, 0, 0),
+        ('7U93SQkIYPA', 'Chest', 2, 0, 0),
+        ('rrVm0fXmBMI', 'Coal Ore', 2, 0, 0),
+        ('TgoPConhmkc', 'Iron Ore', 2, 0, 0),
+        ('XbAT9M7f9rs', 'Hornet from Silksong', 2, 0, 0),
+        ('xZwq8NuZ26U', 'Hornet from Hollow Knight', 2, 0, 0),
+        ('ms8uu0zeU88', 'Steel', 2, 0, 0),
+        ('TNs-07nzmSc', 'Tuff', 2, 0, 0),
     )
     WHERE NOT EXISTS (SELECT * FROM videos);
 ";
