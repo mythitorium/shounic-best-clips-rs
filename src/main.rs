@@ -155,8 +155,17 @@ fn main() {
 // 2. Log IP to the database and returns the user data as it exists in the db.
 // returns Result<(user struct, ip)>, ip>
 fn handle_ip(req: &Request, db: &mut Transaction) -> Result<(User, String), String> {
-    let address: &SocketAddr = req.remote_addr();
-    let ip_string = address.ip().to_string();
+    let ip_string: String;
+
+    // use the forwarded header if present
+    if let Some(proxy_ip) = req.header("X-Forwarded-For") {
+        // I only want the client part of the proxy chain
+        ip_string = proxy_ip.split(',').collect::<Vec<&str>>()[0].to_string();
+    // Use whatever is attached to the request object
+    } else {
+        let address: &SocketAddr = req.remote_addr();
+        ip_string = address.ip().to_string();
+    }
 
     if let Err(_) = db.execute(QUERY_LOG_USER, [ip_string.clone()]) {
         return Err(ip_string);
