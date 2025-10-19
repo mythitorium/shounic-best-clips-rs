@@ -1,8 +1,59 @@
-# shounic-best-clips-rs
+ShounicBestClips
+===
 
-The voting website to be used for shounic's upcoming best clip of the year contest this winter. Loosely Based off of [GameCube762's](https://github.com/Gamecube762/ShounicBestClips) website. 
+Voting website for shounic's best clip contest. Rust port of and successor to [ShounicBestClips](https://github.com/Gamecube762/ShounicBestClips)
 
-## TODO
+Setup
+---
+
+* Install rust
+* Install cmake and clang (this project uses c-based dependencies)
+* `git clone` the project
+* `cargo run` to run the project on port `8080`
+
+
+Routes
+---
+
+* `/` `GET` main html page
+* `/dashboard` `GET` dashboard html page
+* `/vote` `GET` initiate a new vote
+
+Expected query string:
+
+```
+{
+   vote: c  //voting category
+}
+```
+
+Returned payload on 200:
+
+```
+{
+   videos: [
+      {
+         youtube_id: String,
+         id: int,
+         username: String        // optional
+      }
+   ], 
+   c: int,                       //voting category
+   limit_active: bool, 
+   stage: int,
+   current_deadline: int         // unix timestamp in seconds
+}
+```
+
+* `/vote` `POST` submit a vote
+* `/admin/login` `POST` login to the admin dashboard
+* `/server/config` `GET` get server parameters
+* `/server/config` `POST` update server parameters
+* `/server/tables` `GET` get database table data
+* `/server/tables` `POST` update a cell within the db
+
+TODO
+---
 
 - [x] Voting frontend
    - [x] Html
@@ -11,25 +62,5 @@ The voting website to be used for shounic's upcoming best clip of the year conte
    - [x] Config
    - [ ] Table Dashboard
    - [ ] Upload
-- [x] server/config endpoint
-- [x] server/tables endpoint
-- [x] Refactor state struct to not be so ass
-- [x] Prevent voting round value from ever decreasing
-- [x] Make server/tables endpoint target single rows only
-- [ ] Figure out how tf raw submissions are going to be handled
-- [x] Remove token_cache 
-- [x] Implement a new config parameter for controlling eliminations
-  - [x] Endpoint handling 
-  - [x] Database
-  - [x] Implement automatic round increase
-- [x] Remove old tally system
-- [x] Replace all text responses with json ones
-- [x] Implement the ability to disable voting
-- [x] Clean up unused code
-- [x] More payload validation
-- [x] Add a fake round counter that gets reported to the end user
-- [x] Add the ability to send submission usernames to the frontend
-- [x] Add vote cooldown
-- [x] Add login cooldown
-- [x] Fix vote limits
+- [x] Backend
 
