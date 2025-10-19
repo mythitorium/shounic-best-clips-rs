@@ -20,9 +20,6 @@ use routes::MessageJson;
 use rouille::{self, router};
 use std::error::Error as StdError;
 use std::time;
-//use serde;
-//use serde_derive;
-//use serde_derive::Serialize;
 use std::{fs::{self, File}, net::SocketAddr, sync::Mutex, thread, time::{Duration, Instant} };
 
 //use postgres::{Client, NoTls, Transaction};

@@ -204,6 +204,7 @@ pub const QUERY_SETUP: &str = { "
 " };
 
 
+// Fill db with fake videos
 pub const QUERY_INSERT_PLACEHOLDER_VIDEOS: &str = "
     INSERT INTO videos (youtube_id, uploader_username, category, is_eliminated, is_disqualified)
     SELECT * FROM (VALUES
