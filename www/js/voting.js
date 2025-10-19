@@ -59,7 +59,6 @@ async function request(endpoint, queries, payload, method) {
         return responseArr[2];
     });
 
-
     if (status === 200) {
         clearErrField();
         return json;
@@ -78,7 +77,12 @@ async function request(endpoint, queries, payload, method) {
         } else {
             console.log(json);
             if (Object.hasOwn(json, "message")) {
-                getById("errFieldP").innerHTML = "Error: " + json.message;
+                // vote limit error technically isn't an error, so don't communicate it as an error
+                if (json.message === "You're voting too fast! Slow down!") {
+                    getById("errFieldP").innerHTML = json.message;
+                } else {
+                    getById("errFieldP").innerHTML = "Error: " + json.message;
+                }
             } else {
                 getById("errFieldP").innerHTML = "Error: " + fallbackText;
             }
