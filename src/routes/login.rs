@@ -6,7 +6,6 @@
 //
 //
 
-
 use serde::{Deserialize, Serialize};
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
 use rouille::{try_or_400, Request};
