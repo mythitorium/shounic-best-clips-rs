@@ -1,0 +1,8 @@
+.github/
+db/
+old code/
+.gitignore
+.gitattributes
+Dockerfile
+readme.MD
+target/
