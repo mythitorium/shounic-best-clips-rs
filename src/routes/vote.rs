@@ -15,6 +15,13 @@ use serde::{Deserialize, Serialize};
 use crate::{routes::*, *};
 use serde_qs;
 
+//
+//
+//
+
+
+const VOTE_COOL_DOWN_MILLIS: u128 = 5000;
+
 
 //
 //
@@ -203,7 +210,7 @@ pub fn handle_post(request: &Request, db: &mut Transaction, user: &User, state: 
             }
 
             // User voted too fast
-            if time < active_vote[0].2 as u128 {
+            if time < active_vote[0].2 as u128 + VOTE_COOL_DOWN_MILLIS {
                 return Response::message_json("You're voting too fast! Slow down!").with_status_code(429);
             }
 
