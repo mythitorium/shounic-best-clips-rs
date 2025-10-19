@@ -10,9 +10,9 @@ use rusqlite::Transaction;
 
 use crate::{routes::login, sql::*};
 
-// This is the server state. It stores configuration and handles any caching that's best done outside a database
 //
-// It also creates and manages it's own file (currently set to config/config.toml), such that basic config can be cached between sessions
+//
+//
 
 pub const NUMBER_OF_CATEGORIES: i64 = 2;
 const CONFIG_FILENAME: &str = "server_config.toml";
@@ -20,6 +20,10 @@ const ALLOW_VOTING_BY_DEFAULT: bool = true;
 const LOGIN_LOCKOUT_TIME_SECS: u64 = 180;
 const CLAIMS_LIFETIME_MINS: u64 = 120;
 
+
+// This is the server state. It stores configuration and handles any caching that's best done outside a database
+//
+// It also creates and manages it's own file (currently set to config/config.toml), such that basic config can be cached between sessions
 pub struct State {
     config: Config,
 
