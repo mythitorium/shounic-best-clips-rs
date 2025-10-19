@@ -14,7 +14,7 @@ Setup
 Routes
 ---
 
-Check `src/routes`. Route information will be in comment form at the top of each file.
+See `src/routes`
 
 TODO
 ---
