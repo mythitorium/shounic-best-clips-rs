@@ -568,6 +568,10 @@ body {
 
 .invisible { visibility: hidden !important; }
 
+:disabled {
+    cursor: not-allowed;
+}
+
 
 //.selected { 
 //    background-color: $color-text !important;

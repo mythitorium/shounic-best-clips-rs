@@ -517,4 +517,8 @@ body {
   visibility: hidden !important;
 }
 
+:disabled {
+  cursor: not-allowed;
+}
+
 /*# sourceMappingURL=voting.css.map */
