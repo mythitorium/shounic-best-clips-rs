@@ -16,14 +16,16 @@ Routes
 ---
 
 * `/` `GET` main html page
+
 * `/dashboard` `GET` dashboard html page
+
 * `/vote` `GET` initiate a new vote
 
 Expected query string:
 
 ```
 {
-   vote: c  //voting category
+   c: int  //voting category
 }
 ```
 
@@ -46,6 +48,15 @@ Returned payload on 200:
 ```
 
 * `/vote` `POST` submit a vote
+
+Expected payload:
+
+```
+{
+   
+}
+```
+
 * `/admin/login` `POST` login to the admin dashboard
 * `/server/config` `GET` get server parameters
 * `/server/config` `POST` update server parameters
