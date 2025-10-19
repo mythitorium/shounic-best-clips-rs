@@ -9,43 +9,46 @@ Routes
 
 Expected query string:
 
-``` json
+``` javascript
 {
-   "c": int  //voting category
+   "c": Int  //voting category
 }
 ```
 
 Returned payload on 200:
 
-``` json
+``` javascript
 {
    "videos": [
       {
          "youtube_id": String,
-         "id": int,
+         "id": Int,
          "username": String        // optional
       }
    ], 
-   "c": int,                       //voting category
-   "limit_active": bool, 
-   "stage": int,
-   "current_deadline": int         // unix timestamp in seconds
+   "c": Int,                       //voting category
+   "limit_active": Bool, 
+   "stage": Int,
+   "current_deadline": Int         // unix timestamp in seconds
 }
 ```
-
+<br/>
 
 * `/vote` `POST` submit a vote
 
 Expected payload:
 
-``` json
+``` javascript
 {
-   "vote": [int]     // expects a list of any order, containing the ids
+   "vote": [Int]     // expects a list of any order, containing the ids
+                     // expects the list to be the same size and
+                     // contain the same ints as was given with the most recent /vote GET
 }
 ```
 
 Returns empty OK on 200.
 
+<br/>
 
 * `/admin/login` `POST` login to the admin dashboard
 * `/server/config` `GET` get server parameters
